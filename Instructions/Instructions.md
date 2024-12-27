@@ -210,10 +210,16 @@ The application is a tool that allows users to interact with public APIs via a c
 
 ### Models
 
-- **User**
+- **User** (Supabase Auth User)
   - `id`: UUID
   - `email`: String, unique
-  - `password`: String (hashed)
+  - `user_metadata`: JSON
+    - `full_name`: String
+  - `created_at`: Timestamp
+  - `updated_at`: Timestamp
+
+- **UserProfile** (Our Custom User Data)
+  - `user_id`: UUID (foreign key to Supabase Auth User)
   - `role`: Enum (free, premium)
   - `createdAt`: Timestamp
   - `updatedAt`: Timestamp
@@ -234,10 +240,36 @@ The application is a tool that allows users to interact with public APIs via a c
   - `createdAt`: Timestamp
   - `updatedAt`: Timestamp
 
+- **UserMFA**
+  - `user_id`: UUID (foreign key to User)
+  - `secret`: String
+  - `backup_codes`: String[]
+  - `is_enabled`: Boolean
+  - `createdAt`: Timestamp
+  - `updatedAt`: Timestamp
+
+- **APILog**
+  - `id`: UUID
+  - `userId`: UUID (foreign key to User)
+  - `endpointId`: UUID (foreign key to APIEndpoint)
+  - `status`: String
+  - `request`: JSON
+  - `response`: JSON
+  - `error`: JSON
+  - `createdAt`: Timestamp
+
+- **APIUsage**
+  - `userId`: UUID (foreign key to User)
+  - `period`: String (daily, monthly)
+  - `count`: Integer
+  - `updatedAt`: Timestamp
+
 ### Relationships
 
 - **User** has many **APIEndpoints**.
 - **User** has one **Subscription**.
+- **User** has one **UserProfile**.
+- **User** has one **UserMFA**.
 
 ---
 

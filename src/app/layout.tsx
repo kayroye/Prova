@@ -1,15 +1,13 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Header } from "@/components/landing/Header";
+'use client'
 
-const inter = Inter({ subsets: ["latin"] });
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { SessionProvider } from "next-auth/react"
+import { Toaster } from "@/components/ui/toaster"
+import { Header } from "@/components/landing/Header"
 
-export const metadata: Metadata = {
-  title: "TalkToAPI",
-  description: "Interact with APIs through natural conversations",
-};
+const inter = Inter({ subsets: ["latin"] })
 
 export default function RootLayout({
   children,
@@ -19,18 +17,21 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            {children}
-          </div>
-        </ThemeProvider>
+        <SessionProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <div className="relative flex min-h-screen flex-col">
+              <Header />
+              {children}
+            </div>
+            <Toaster />
+          </ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
-  );
+  )
 }

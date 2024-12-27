@@ -17,9 +17,12 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { checkLoginAttempts, recordFailedLoginAttempt, resetLoginAttempts } from "@/lib/auth/password-reset";
+import { MFAVerify } from "./mfa-verify";
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [showMfa, setShowMfa] = React.useState(false);
+  const [credentials, setCredentials] = React.useState({ email: "", password: "" });
   const router = useRouter();
   const { toast } = useToast();
 
@@ -30,6 +33,7 @@ export function LoginForm() {
     const formData = new FormData(event.currentTarget as HTMLFormElement);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
+    setCredentials({ email, password });
 
     if (!checkLoginAttempts(email)) {
       toast({
@@ -47,6 +51,12 @@ export function LoginForm() {
         password,
         redirect: false,
       });
+
+      if (result?.error === "MFA_REQUIRED") {
+        setShowMfa(true);
+        setIsLoading(false);
+        return;
+      }
 
       if (result?.error) {
         recordFailedLoginAttempt(email);
@@ -72,6 +82,39 @@ export function LoginForm() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  const handleMfaVerify = async (token: string) => {
+    try {
+      const result = await signIn("credentials", {
+        email: credentials.email,
+        password: credentials.password,
+        mfaToken: token,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+
+      resetLoginAttempts(credentials.email);
+      router.push("/dashboard");
+      toast({
+        title: "Success",
+        description: "Successfully logged in!",
+      });
+    } catch (error) {
+      throw error; // Let MFAVerify component handle the error
+    }
+  };
+
+  if (showMfa) {
+    return (
+      <MFAVerify 
+        onVerify={handleMfaVerify}
+        onCancel={() => setShowMfa(false)}
+      />
+    );
   }
 
   return (
@@ -102,13 +145,6 @@ export function LoginForm() {
             <div className="grid gap-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Button
-                  variant="link"
-                  className="px-0 text-sm"
-                  onClick={() => router.push("/forgot-password")}
-                >
-                  Forgot password?
-                </Button>
               </div>
               <Input
                 id="password"
@@ -127,6 +163,13 @@ export function LoginForm() {
             </Button>
           </div>
         </form>
+        <Button
+          variant="link"
+          className="px-0 text-sm mt-2"
+          onClick={() => router.push("/forgot-password")}
+        >
+          Forgot password?
+        </Button>
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t" />

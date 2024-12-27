@@ -1,13 +1,14 @@
 import {
   Loader2,
   Mail,
-  Github,
+  ExternalLink,
 } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
+import { FaGoogle, FaGithub } from "react-icons/fa";
 
 export const Icons = {
   spinner: Loader2,
-  google: FcGoogle,
-  gitHub: Github,
+  google: FaGoogle,
+  gitHub: FaGithub,
   mail: Mail,
+  externalLink: ExternalLink,
 } as const; 

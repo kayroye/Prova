@@ -1,37 +1,39 @@
 'use client'
 
-import { Button } from "@/components/ui/button"
+import { useSession } from "next-auth/react"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Icons } from "@/components/ui/icons"
 
 export function Hero() {
-  const scrollToFeatures = () => {
-    const featuresSection = document.getElementById('features')
-    featuresSection?.scrollIntoView({ behavior: 'smooth' })
-  }
+  const { data: session } = useSession()
 
   return (
-    <section className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6">
-          Interact with APIs Effortlessly
-        </h1>
-        <p className="text-xl sm:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-          Leverage the power of conversational interfaces to manage your API interactions.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button asChild size="lg" className="text-lg">
-            <Link href="/signup">
-              Sign Up
-            </Link>
-          </Button>
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="text-lg"
-            onClick={scrollToFeatures}
-          >
-            Learn More
-          </Button>
+    <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col items-center space-y-8 text-center">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              Talk to Your APIs
+            </h1>
+            <p className="mt-6 text-xl text-muted-foreground">
+              Interact with APIs using natural language. Test, debug, and manage your API interactions effortlessly.
+            </p>
+          </div>
+          <div className="space-x-4">
+            {session ? (
+              <Button asChild size="lg">
+                <Link href="/dashboard">
+                  Dashboard
+                  <Icons.externalLink className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild size="lg">
+                <Link href="/signup">Get Started</Link>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </section>

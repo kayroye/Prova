@@ -15,12 +15,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export function SignUpForm() {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
@@ -37,26 +31,31 @@ export function SignUpForm() {
     const name = formData.get("name") as string;
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const result = await signIn("credentials", {
         email,
         password,
-        options: {
-          data: {
-            full_name: name,
-          },
-        },
+        name,
+        redirect: false,
       });
 
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message,
-        });
+      if (result?.error) {
+        if (result.error === "Check your email for a verification link") {
+          toast({
+            title: "Success",
+            description: "Please check your email to verify your account before logging in.",
+          });
+          router.push("/auth/verify-request");
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: result.error,
+          });
+        }
       } else {
         toast({
           title: "Success",
-          description: "Please check your email to verify your account.",
+          description: "Please check your email to verify your account before logging in.",
         });
         router.push("/login");
       }

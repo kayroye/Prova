@@ -91,7 +91,7 @@ export function ForgotPasswordForm() {
         </form>
       </CardContent>
       <CardFooter>
-        <p className="px-8 text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm text-muted-foreground w-full">
           Remember your password?{" "}
           <Button
             variant="link"
