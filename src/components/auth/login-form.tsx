@@ -22,9 +22,26 @@ import { MFAVerify } from "./mfa-verify";
 export function LoginForm() {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [showMfa, setShowMfa] = React.useState(false);
-  const [credentials, setCredentials] = React.useState({ email: "", password: "" });
+  const [credentials, setCredentials] = React.useState({ 
+    email: "", 
+    password: "",
+    provider: "" as string | null 
+  });
   const router = useRouter();
   const { toast } = useToast();
+
+  // Get URL parameters for OAuth MFA flow
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get("email");
+    const requireMfa = params.get("requireMfa");
+    const provider = params.get("provider");
+
+    if (email && requireMfa === "true" && provider) {
+      setCredentials({ email, password: "", provider });
+      setShowMfa(true);
+    }
+  }, []);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -33,7 +50,7 @@ export function LoginForm() {
     const formData = new FormData(event.currentTarget as HTMLFormElement);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    setCredentials({ email, password });
+    setCredentials({ email, password, provider: null });
 
     if (!checkLoginAttempts(email)) {
       toast({
@@ -86,18 +103,32 @@ export function LoginForm() {
 
   const handleMfaVerify = async (token: string) => {
     try {
-      const result = await signIn("credentials", {
-        email: credentials.email,
-        password: credentials.password,
-        mfaToken: token,
-        redirect: false,
-      });
+      let result;
+      
+      if (credentials.provider) {
+        // OAuth MFA verification
+        result = await signIn(credentials.provider, {
+          redirect: false,
+          email: credentials.email,
+          mfaToken: token
+        });
+      } else {
+        // Regular credentials MFA verification
+        result = await signIn("credentials", {
+          email: credentials.email,
+          password: credentials.password,
+          mfaToken: token,
+          redirect: false,
+        });
+      }
 
       if (result?.error) {
         throw new Error(result.error);
       }
 
-      resetLoginAttempts(credentials.email);
+      if (credentials.email) {
+        resetLoginAttempts(credentials.email);
+      }
       router.push("/dashboard");
       toast({
         title: "Success",
@@ -112,7 +143,12 @@ export function LoginForm() {
     return (
       <MFAVerify 
         onVerify={handleMfaVerify}
-        onCancel={() => setShowMfa(false)}
+        onCancel={() => {
+          setShowMfa(false);
+          setCredentials({ email: "", password: "", provider: null });
+          // Clear URL parameters
+          window.history.replaceState({}, "", window.location.pathname);
+        }}
       />
     );
   }

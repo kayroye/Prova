@@ -40,6 +40,14 @@
   - `createdAt`: Timestamp
   - `updatedAt`: Timestamp
 
+- **oauth_accounts**
+  - `id`: UUID
+  - `user_id`: UUID (foreign key to User)
+  - `provider`: String (google, github)
+  - `provider_account_id`: String
+  - `created_at`: Timestamp
+  - `updated_at`: Timestamp
+
 - **api_logs**
   - `id`: UUID
   - `userId`: UUID (foreign key to User)
