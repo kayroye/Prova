@@ -151,15 +151,19 @@ export async function POST(request: Request) {
         apiResponseData = await apiResponse.text();
 
         // Log successful API call
-        await supabase.from("api_logs").insert([{
+        const { error } = await supabase.from("api_logs").insert([{
           user_id: session.user.id,
           endpoint_id: endpointId,
           request: parameters,
           response: apiResponseData,
           status: apiResponse.status >= 200 && apiResponse.status < 300 ? "success" : "error",
           created_at: now,
-          updated_at: now
         }]);
+
+        if (error) {
+          console.error("Error logging API call:", error);
+          throw error;
+        }
 
       } catch (error) {
         // Log failed API call
@@ -170,7 +174,6 @@ export async function POST(request: Request) {
           error: error instanceof Error ? error.message : "Unknown error",
           status: "error",
           created_at: now,
-          updated_at: now
         }]);
 
         throw error;

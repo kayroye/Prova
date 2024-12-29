@@ -66,6 +66,10 @@ export function SettingsContent({ userId }: SettingsContentProps) {
           <Shield className="h-4 w-4" />
           Security
         </TabsTrigger>
+        <TabsTrigger value="api-preferences" className="flex items-center gap-2">
+          <Key className="h-4 w-4" />
+          API Preferences
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="security" className="space-y-4">

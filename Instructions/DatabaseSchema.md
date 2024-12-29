@@ -50,19 +50,19 @@
 
 - **api_logs**
   - `id`: UUID
-  - `userId`: UUID (foreign key to User)
-  - `endpointId`: UUID (foreign key to APIEndpoint)
+  - `user_id`: UUID (foreign key to User)
+  - `endpoint_id`: UUID (foreign key to APIEndpoint)
   - `status`: String
   - `request`: JSON
   - `response`: JSON
   - `error`: JSON
-  - `createdAt`: Timestamp
+  - `created_at`: Timestamp
 
 - **api_usage**
   - `userId`: UUID (foreign key to User)
   - `period`: String (daily, monthly)
   - `count`: Integer
-  - `updatedAt`: Timestamp
+  - `updated_at`: Timestamp
 
 - **chat_sessions**
   - `id`: UUID

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/ui/icons"
 
 export function Hero() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
 
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8">
@@ -21,7 +21,12 @@ export function Hero() {
             </p>
           </div>
           <div className="space-x-4">
-            {session ? (
+            {status === "loading" ? (
+              <Button size="lg" disabled>
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                Loading
+              </Button>
+            ) : session ? (
               <Button asChild size="lg">
                 <Link href="/dashboard">
                   Dashboard

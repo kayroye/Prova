@@ -24,7 +24,7 @@ export async function DELETE(
     .from("api_endpoints")
     .select("*")
     .eq("id", id)
-    .eq("userId", session.user.id)
+    .eq("user_id", session.user.id)
     .single();
 
   if (fetchError || !endpoint) {
@@ -35,7 +35,7 @@ export async function DELETE(
     .from("api_endpoints")
     .delete()
     .eq("id", id)
-    .eq("userId", session.user.id);
+    .eq("user_id", session.user.id);
 
   if (deleteError) {
     return new NextResponse(deleteError.message, { status: 500 });

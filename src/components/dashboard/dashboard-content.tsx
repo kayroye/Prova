@@ -1,37 +1,21 @@
 "use client";
 
 import { ChatInterface } from "./chat-interface";
-import { ApiHistory } from "./api-history";
 
-interface ChatEndpoint {
+export interface ChatEndpoint {
   id: string;
   url: string;
   parameters?: string;
 }
 
-interface APICall {
-  id: string;
-  endpoints: ChatEndpoint[];
-  status: string;
-  timestamp: Date;
-  error?: string;
-}
-
-interface DashboardContentProps {
-  apiCalls: APICall[];
+export interface DashboardContentProps {
   selectedEndpoints: ChatEndpoint[];
 }
 
-export function DashboardContent({ 
-  apiCalls, 
-  selectedEndpoints,
-}: DashboardContentProps) {
+export function DashboardContent({ selectedEndpoints }: DashboardContentProps) {
   return (
     <div className="space-y-6">
       <ChatInterface selectedEndpoints={selectedEndpoints} />
-      <div className="rounded-lg border bg-card">
-        <ApiHistory calls={apiCalls} />
-      </div>
     </div>
   );
 } 
