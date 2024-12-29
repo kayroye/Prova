@@ -65,6 +65,10 @@ export async function POST(request: Request) {
             type: "string",
             description: endpoint.parameters || "Parameters for the API call",
           },
+          method: {
+            type: "string",
+            description: "The HTTP method to use for the API call",
+          }
         },
         required: ["parameters"],
       },
@@ -75,10 +79,14 @@ export async function POST(request: Request) {
       chatMessages = [
         {
           role: "system",
-          content: "You are an AI assistant specialized in interacting with APIs. Your capabilities include:\n1. Understanding and calling user-defined APIs through function calling\n2. Explaining API responses in natural language\n3. Suggesting parameters and helping users interact with their APIs effectively\n4. Maintaining context of the conversation and previous API calls\n\nWhen users provide APIs, you can call them using the provided function calls. Always explain what you're doing and help users understand the responses. If you're not sure about the response, ask the user for clarification. Do not write code, or do anything outside of this scope. You are specifically designed to interact with APIs, test them, and help users understand the responses. Keep your responses concise and to the point, and do not include any additional information or commentary."
+          content: "You are an AI assistant specialized in interacting with APIs. Your capabilities include:\n1. Understanding and calling user-defined APIs through function calling\n2. Explaining API responses in natural language\n3. Suggesting parameters and helping users interact with their APIs effectively\n4. Maintaining context of the conversation and previous API calls\n\nWhen users provide APIs, you can call them using the provided function calls. Always explain what you're doing and help users understand the responses. If you're not sure about the response, ask the user for clarification. Do not write code, or do anything outside of this scope. You are specifically designed to interact with APIs, test them, and help users understand the responses. Keep your responses concise and to the point, and do not include any additional information or commentary. Do not write in markdown, just use plain text."
         }
       ];
     } else {
+      messages.unshift({
+        role: "system",
+        content: "You are an AI assistant specialized in interacting with APIs. Your capabilities include:\n1. Understanding and calling user-defined APIs through function calling\n2. Explaining API responses in natural language\n3. Suggesting parameters and helping users interact with their APIs effectively\n4. Maintaining context of the conversation and previous API calls\n\nWhen users provide APIs, you can call them using the provided function calls. Always explain what you're doing and help users understand the responses. If you're not sure about the response, ask the user for clarification. Do not write code, or do anything outside of this scope. You are specifically designed to interact with APIs, test them, and help users understand the responses. Keep your responses concise and to the point, and do not include any additional information or commentary."
+      });
       chatMessages = messages as ChatCompletionMessageParam[];
     }
 
@@ -87,16 +95,18 @@ export async function POST(request: Request) {
       model: "gpt-4o-mini",
       messages: chatMessages,
       functions,
-      function_call: "auto",
     });
 
-    const responseMessage = completion.choices[0].message;
+    let responseMessage = completion.choices[0].message;
+    console.log(responseMessage);
 
     // If the AI wants to call an API
-    if (responseMessage.tool_calls) {
-      const functionName = responseMessage.tool_calls[0].function.name;
+    if (responseMessage.function_call) {
+      console.log('Function call:', responseMessage.function_call);
+      const functionName = responseMessage.function_call.name;
       const endpointId = functionName.replace("call_", "");
-      const parameters = JSON.parse(responseMessage.tool_calls[0].function.arguments).parameters;
+      const parameters = JSON.parse(responseMessage.function_call.arguments).parameters;
+      const method = JSON.parse(responseMessage.function_call.arguments).method || 'GET';
 
       // Find the endpoint
       const endpoint = endpoints?.find(e => e.id === endpointId);
@@ -104,13 +114,44 @@ export async function POST(request: Request) {
         throw new Error("Endpoint not found");
       }
 
+      // Make the actual API call
+      const apiResponse = await fetch(endpoint.url, {
+        method: method,
+        body: method !== 'GET' ? parameters : undefined,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const apiResponseData = await apiResponse.text();
+
+      // Add the function result to messages and get AI's interpretation
+      const newMessages: ChatCompletionMessageParam[] = [
+        ...chatMessages,
+        responseMessage,
+        {
+          role: 'function',
+          name: responseMessage.function_call.name,
+          content: apiResponseData,
+        }
+      ];
+
+      // Get AI's interpretation of the API response
+      const secondCompletion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: newMessages,
+      });
+
+      responseMessage = secondCompletion.choices[0].message;
+
       const now = new Date().toISOString();
       // Log the API call
       await supabase.from("api_logs").insert([{
         user_id: session.user.id,
         endpoint_id: endpointId,
         request: parameters,
-        status: "pending",
+        response: apiResponseData,
+        status: apiResponse.status.toString(),
         created_at: now,
         updated_at: now
       }]);
