@@ -48,6 +48,20 @@ export async function POST(request: Request) {
   try {
     const { messages, chatId } = await request.json();
 
+    // Store the user's message first if it exists
+    if (chatId && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === "user") {
+        await supabase.from("chat_messages").insert([{
+          chat_session_id: chatId,
+          sender: "user",
+          message: lastMessage.content,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }]);
+      }
+    }
+
     // Get user's API endpoints
     const { data: endpoints } = await supabase
       .from("api_endpoints")
@@ -79,13 +93,13 @@ export async function POST(request: Request) {
       chatMessages = [
         {
           role: "system",
-          content: "You are an AI assistant specialized in interacting with APIs. Your capabilities include:\n1. Understanding and calling user-defined APIs through function calling\n2. Explaining API responses in natural language\n3. Suggesting parameters and helping users interact with their APIs effectively\n4. Maintaining context of the conversation and previous API calls\n\nWhen users provide APIs, you can call them using the provided function calls. Always explain what you're doing and help users understand the responses. If you're not sure about the response, ask the user for clarification. Do not write code, or do anything outside of this scope. You are specifically designed to interact with APIs, test them, and help users understand the responses. Keep your responses concise and to the point, and do not include any additional information or commentary. Do not write in markdown, just use plain text."
+          content: "You are an AI assistant specialized in interacting with APIs. Your capabilities include:\n1. Understanding and calling user-defined APIs through function calling\n2. Explaining API responses in natural language\n3. Suggesting parameters and helping users interact with their APIs effectively\n4. Maintaining context of the conversation and previous API calls\n\nWhen users provide APIs, you can call them using the provided function calls. Always explain what you're doing and help users understand the responses. If you're not sure about the response, ask the user for clarification. Do not write code, or do anything outside of this scope. You are specifically designed to interact with APIs, test them, and help users understand the responses. Keep your responses concise and to the point, and do not include any additional information or commentary. If the API call returns a link to an image, you can embed it using markdown."
         }
       ];
     } else {
       messages.unshift({
         role: "system",
-        content: "You are an AI assistant specialized in interacting with APIs. Your capabilities include:\n1. Understanding and calling user-defined APIs through function calling\n2. Explaining API responses in natural language\n3. Suggesting parameters and helping users interact with their APIs effectively\n4. Maintaining context of the conversation and previous API calls\n\nWhen users provide APIs, you can call them using the provided function calls. Always explain what you're doing and help users understand the responses. If you're not sure about the response, ask the user for clarification. Do not write code, or do anything outside of this scope. You are specifically designed to interact with APIs, test them, and help users understand the responses. Keep your responses concise and to the point, and do not include any additional information or commentary."
+        content: "You are an AI assistant specialized in interacting with APIs. Your capabilities include:\n1. Understanding and calling user-defined APIs through function calling\n2. Explaining API responses in natural language\n3. Suggesting parameters and helping users interact with their APIs effectively\n4. Maintaining context of the conversation and previous API calls\n\nWhen users provide APIs, you can call them using the provided function calls. Always explain what you're doing and help users understand the responses. If you're not sure about the response, ask the user for clarification. Do not write code, or do anything outside of this scope. You are specifically designed to interact with APIs, test them, and help users understand the responses. Keep your responses concise and to the point, and do not include any additional information or commentary. If the API call returns a link to an image, you can embed it using markdown."
       });
       chatMessages = messages as ChatCompletionMessageParam[];
     }
@@ -98,7 +112,6 @@ export async function POST(request: Request) {
     });
 
     let responseMessage = completion.choices[0].message;
-    console.log(responseMessage);
 
     // If the AI wants to call an API
     if (responseMessage.function_call) {
@@ -114,16 +127,54 @@ export async function POST(request: Request) {
         throw new Error("Endpoint not found");
       }
 
-      // Make the actual API call
-      const apiResponse = await fetch(endpoint.url, {
-        method: method,
-        body: method !== 'GET' ? parameters : undefined,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      let apiResponseData;
+      let apiResponse;
+      const now = new Date().toISOString();
 
-      const apiResponseData = await apiResponse.text();
+      try {
+        // Make the actual API call
+        let url = endpoint.url;
+        if (method === 'GET' && parameters) {
+          // For GET requests, append parameters to URL
+          const queryParams = new URLSearchParams(JSON.parse(parameters));
+          url = `${url}${url.includes('?') ? '&' : '?'}${queryParams.toString()}`;
+        }
+
+        apiResponse = await fetch(url, {
+          method: method,
+          body: method !== 'GET' ? parameters : undefined,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        apiResponseData = await apiResponse.text();
+
+        // Log successful API call
+        await supabase.from("api_logs").insert([{
+          user_id: session.user.id,
+          endpoint_id: endpointId,
+          request: parameters,
+          response: apiResponseData,
+          status: apiResponse.status >= 200 && apiResponse.status < 300 ? "success" : "error",
+          created_at: now,
+          updated_at: now
+        }]);
+
+      } catch (error) {
+        // Log failed API call
+        await supabase.from("api_logs").insert([{
+          user_id: session.user.id,
+          endpoint_id: endpointId,
+          request: parameters,
+          error: error instanceof Error ? error.message : "Unknown error",
+          status: "error",
+          created_at: now,
+          updated_at: now
+        }]);
+
+        throw error;
+      }
 
       // Add the function result to messages and get AI's interpretation
       const newMessages: ChatCompletionMessageParam[] = [
@@ -144,18 +195,6 @@ export async function POST(request: Request) {
 
       responseMessage = secondCompletion.choices[0].message;
 
-      const now = new Date().toISOString();
-      // Log the API call
-      await supabase.from("api_logs").insert([{
-        user_id: session.user.id,
-        endpoint_id: endpointId,
-        request: parameters,
-        response: apiResponseData,
-        status: apiResponse.status.toString(),
-        created_at: now,
-        updated_at: now
-      }]);
-
       // Update usage count
       await supabase.rpc("increment_api_usage", {
         p_user_id: session.user.id,
@@ -169,7 +208,7 @@ export async function POST(request: Request) {
       await supabase.from("chat_messages").insert([{
         chat_session_id: chatId,
         sender: "ai",
-        message: JSON.stringify(responseMessage),
+        message: JSON.stringify(responseMessage.content),
         created_at: now,
         updated_at: now
       }]);

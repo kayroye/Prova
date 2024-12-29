@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Trash } from "lucide-react";
+import { Loader2, Plus, Trash, MessageSquare } from "lucide-react";
 
 interface APIEndpoint {
   id: string;
@@ -17,7 +17,11 @@ interface APIEndpoint {
   updatedAt: string;
 }
 
-export function ApiManagement() {
+interface ApiManagementProps {
+  onStartChat?: (endpoints: APIEndpoint[]) => void;
+}
+
+export function ApiManagement({ onStartChat }: ApiManagementProps) {
   const [endpoints, setEndpoints] = useState<APIEndpoint[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [newUrl, setNewUrl] = useState("");
@@ -163,21 +167,33 @@ export function ApiManagement() {
                 key={endpoint.id}
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
-                <div className="space-y-1">
-                  <p className="font-medium">{endpoint.url}</p>
+                <div className="space-y-1 flex-1 min-w-0">
+                  <p className="font-medium truncate">
+                    {endpoint.url}
+                  </p>
                   {endpoint.parameters && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground truncate">
                       Parameters: {endpoint.parameters}
                     </p>
                   )}
                 </div>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleDeleteEndpoint(endpoint.id)}
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-2 ml-4 shrink-0">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onStartChat?.([endpoint])}
+                    title="Start Chat with this API"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleDeleteEndpoint(endpoint.id)}
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

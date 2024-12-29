@@ -3,10 +3,15 @@ import { getServerSession } from "next-auth";
 import { createClient } from "@/lib/supabase/server";
 import authOptions from "@/app/api/auth/authOptions";
 
+type RouteParams = Promise<{ id: string }>
+
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: RouteParams }
 ) {
+  const actualParams = await params;
+  const id = actualParams.id;
+  
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return new NextResponse("Unauthorized", { status: 401 });
@@ -18,7 +23,7 @@ export async function DELETE(
   const { data: endpoint, error: fetchError } = await supabase
     .from("api_endpoints")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("userId", session.user.id)
     .single();
 
@@ -29,7 +34,7 @@ export async function DELETE(
   const { error: deleteError } = await supabase
     .from("api_endpoints")
     .delete()
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("userId", session.user.id);
 
   if (deleteError) {

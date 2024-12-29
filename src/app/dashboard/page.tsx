@@ -1,8 +1,7 @@
 import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { DashboardContent } from "@/components/dashboard/dashboard-content";
-import { ApiManagement } from "@/components/dashboard/api-management";
+import { DashboardWrapper } from "@/components/dashboard/dashboard-wrapper";
 import authOptions from "@/app/api/auth/authOptions";
 import Link from "next/link";
 import { Home, History, Settings, User, Menu } from "lucide-react";
@@ -107,18 +106,7 @@ export default async function Dashboard() {
       <main className="flex-1">
         <div className="max-w-screen-xl mx-auto px-6 py-8">
           <h1 className="text-2xl font-bold mb-6">Welcome back, {session.user.name || session.user.email}</h1>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* API Management */}
-            <div className="lg:col-span-4">
-              <ApiManagement />
-            </div>
-            
-            {/* Chat Interface */}
-            <div className="lg:col-span-8">
-              <DashboardContent />
-            </div>
-          </div>
+          <DashboardWrapper />
         </div>
       </main>
     </div>

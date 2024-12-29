@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Send } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: string;
@@ -28,22 +29,7 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (selectedEndpoints?.length) {
-      // Create a new chat session when endpoints are selected
-      createChatSession();
-    }
-  }, [selectedEndpoints]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const createChatSession = async () => {
+  const createChatSession = useCallback(async () => {
     try {
       const response = await fetch("/api/chat/session", {
         method: "POST",
@@ -74,6 +60,21 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
         description: "Failed to start chat session",
       });
     }
+  }, [selectedEndpoints, toast]);
+
+  useEffect(() => {
+    if (selectedEndpoints?.length) {
+      // Create a new chat session when endpoints are selected
+      createChatSession();
+    }
+  }, [selectedEndpoints, createChatSession]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleSubmit = async () => {
@@ -157,7 +158,13 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
                       : "bg-muted"
                   }`}
                 >
-                  <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                  <div className={`prose prose-sm max-w-none ${
+                    message.role === "user"
+                      ? "[&_*]:text-primary-foreground"
+                      : "dark:prose-invert"
+                  }`}>
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  </div>
                   <p className="text-xs mt-1 opacity-70">
                     {new Date(message.timestamp).toLocaleTimeString()}
                   </p>

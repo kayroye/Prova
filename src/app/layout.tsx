@@ -1,18 +1,19 @@
-'use client'
+"use client";
 
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { SessionProvider } from "next-auth/react"
-import { Toaster } from "@/components/ui/toaster"
-import { Header } from "@/components/landing/Header"
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { SessionProvider } from "next-auth/react";
+import { Toaster } from "@/components/ui/toaster";
+import { Header } from "@/components/landing/Header";
+import { Suspense } from "react";
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -25,13 +26,15 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <div className="relative flex min-h-screen flex-col">
-              <Header />
-              {children}
+              <Suspense>
+                <Header />
+                {children}
+              </Suspense>
             </div>
             <Toaster />
           </ThemeProvider>
         </SessionProvider>
       </body>
     </html>
-  )
+  );
 }

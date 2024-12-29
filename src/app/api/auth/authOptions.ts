@@ -239,7 +239,7 @@ const authOptions: AuthOptions = {
           return setupUrl;
         }
 
-        let userId = existingUser.id;
+        const userId = existingUser.id;
         console.log("Existing user check result:", { userId, exists: !!userId });
 
         // Check if user has profile initialized
