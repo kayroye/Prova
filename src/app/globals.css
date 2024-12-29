@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Force scrollbar to always show to prevent layout shifts */
+html {
+  overflow-y: scroll;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
