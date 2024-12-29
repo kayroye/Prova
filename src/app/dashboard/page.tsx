@@ -2,11 +2,14 @@ import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
+import { ApiManagement } from "@/components/dashboard/api-management";
 import authOptions from "@/app/api/auth/authOptions";
 import Link from "next/link";
 import { Home, History, Settings, User, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Dashboard - TalkToAPI",
@@ -26,6 +29,18 @@ export default async function Dashboard() {
   if (!session) {
     redirect("/login");
   }
+
+  // Fetch user role from profile
+  const supabase = createClient();
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("role")
+    .eq("user_id", session.user.id)
+    .single();
+
+  const userRole = profile?.role || "free";
+  const roleDisplay = userRole === "premium" ? "Pro" : "Free";
+  const roleBadgeVariant = userRole === "premium" ? "default" : "secondary";
 
   return (
     <div className="flex-1">
@@ -82,6 +97,7 @@ export default async function Dashboard() {
               <span className="text-sm font-medium hidden sm:inline">
                 {session.user.name || session.user.email}
               </span>
+              <Badge variant={roleBadgeVariant}>{roleDisplay}</Badge>
             </div>
           </div>
         </div>
@@ -91,7 +107,18 @@ export default async function Dashboard() {
       <main className="flex-1">
         <div className="max-w-screen-xl mx-auto px-6 py-8">
           <h1 className="text-2xl font-bold mb-6">Welcome back, {session.user.name || session.user.email}</h1>
-          <DashboardContent />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* API Management */}
+            <div className="lg:col-span-4">
+              <ApiManagement />
+            </div>
+            
+            {/* Chat Interface */}
+            <div className="lg:col-span-8">
+              <DashboardContent />
+            </div>
+          </div>
         </div>
       </main>
     </div>

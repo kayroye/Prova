@@ -1,70 +1,131 @@
-├── README.md
-├── package.tson
-├── next.config.ts
-├── tailwind.config.ts
-├── postcss.config.ts
-├── .env.local
-├── public/
-│   ├── images/
-│   │   └── (static images)
-│   └── favicon.ico
-├── src/
-│   ├── app/
-│   │   ├── page.tsx
-│   │   ├── layout.tsx
-│   │   ├── head.ts
-│   │   ├── globals.css
-│   │   ├── api/
-│   │   │   ├── auth/
-│   │   │   │   └── [...nextauth].ts
-│   │   │   ├── api-endpoints/
-│   │   │   │   ├── index.ts
-│   │   │   │   └── [id].ts
-│   │   │   └── docs/
-│   │   │       └── index.ts
-│   │   └── (other app router files)
-│   ├── components/
-│   │   ├── Header/
-│   │   │   └── Header.ts
-│   │   ├── Footer/
-│   │   │   └── Footer.ts
-│   │   ├── HeroBanner/
-│   │   │   └── HeroBanner.ts
-│   │   ├── Features/
-│   │   │   └── Features.ts
-│   │   ├── Dashboard/
-│   │   │   ├── Sidebar.ts
-│   │   │   └── ChatInterface.ts
-│   │   └── (other reusable components)
-│   ├── lib/
-│   │   ├── supabase.ts
-│   │   ├── stripe.ts
-│   │   ├── llm.ts
-│   │   └── (other library files)
-│   ├── hooks/
-│   │   ├── useAuth.ts
-│   │   └── useApi.ts
-│   ├── context/
-│   │   └── AuthContext.ts
-│   ├── services/
-│   │   ├── apiService.ts
-│   │   ├── authService.ts
-│   │   └── llmService.ts
-│   ├── utils/
-│   │   └── helpers.ts
-│   ├── styles/
-│   │   ├── globals.css
-│   │   └── (component-specific styles)
-│   └── (additional directories as needed)
-├── tests/
-│   ├── unit/
-│   │   ├── components/
-│   │   │   └── Header.test.ts
-│   │   └── (other unit tests)
-│   ├── integration/
-│   │   └── auth.test.ts
-│   └── e2e/
-│       └── app.spec.ts
-└── talktoapi/
-    └── Instructions/
-        └── Instructions.md
+src
+│   middleware.ts
+│
+├───app
+│   │   favicon.ico
+│   │   globals.css
+│   │   layout.tsx
+│   │   metadata.ts
+│   │   page.tsx
+│   │
+│   ├───api
+│   │   ├───auth
+│   │   │   │   authOptions.ts
+│   │   │   │
+│   │   │   ├───mfa
+│   │   │   │   ├───disable
+│   │   │   │   │       route.ts
+│   │   │   │   │
+│   │   │   │   ├───enable
+│   │   │   │   │       route.ts
+│   │   │   │   │
+│   │   │   │   └───setup
+│   │   │   │           route.ts
+│   │   │   │
+│   │   │   ├───settings
+│   │   │   │       route.ts
+│   │   │   │
+│   │   │   ├───setup
+│   │   │   │       route.ts
+│   │   │   │
+│   │   │   └───[...nextauth]
+│   │   │           route.ts
+│   │   │
+│   │   └───chat
+│   │           route.ts
+│   │
+│   ├───auth
+│   │   ├───callback
+│   │   │       page.tsx
+│   │   │
+│   │   ├───setup-password
+│   │   │       page.tsx
+│   │   │
+│   │   └───verify-request
+│   │           page.tsx
+│   │
+│   ├───dashboard
+│   │   │   layout.tsx
+│   │   │   page.tsx
+│   │   │
+│   │   └───settings
+│   │           page.tsx
+│   │
+│   ├───forgot-password
+│   │       page.tsx
+│   │
+│   ├───login
+│   │       page.tsx
+│   │
+│   ├───reset-password
+│   │       page.tsx
+│   │
+│   └───signup
+│           page.tsx
+│
+├───components
+│   │   theme-provider.tsx
+│   │   theme-toggle.tsx
+│   │
+│   ├───auth
+│   │       forgot-password-form.tsx
+│   │       login-form.tsx
+│   │       mfa-setup.tsx
+│   │       mfa-verify.tsx
+│   │       reset-password-form.tsx
+│   │       setup-password-form.tsx
+│   │       signup-form.tsx
+│   │
+│   ├───dashboard
+│   │       api-form.tsx
+│   │       api-history.tsx
+│   │       chat-interface.tsx
+│   │       dashboard-content.tsx
+│   │       settings-content.tsx
+│   │
+│   ├───landing
+│   │       Demo.tsx
+│   │       Features.tsx
+│   │       Footer.tsx
+│   │       Header.tsx
+│   │       Hero.tsx
+│   │
+│   └───ui
+│           avatar.tsx
+│           breadcrumb.tsx
+│           button.tsx
+│           card.tsx
+│           checkbox.tsx
+│           dialog.tsx
+│           drawer.tsx
+│           dropdown-menu.tsx
+│           form.tsx
+│           hover-card.tsx
+│           icons.tsx
+│           input-otp.tsx
+│           input.tsx
+│           label.tsx
+│           progress.tsx
+│           scroll-area.tsx
+│           separator.tsx
+│           sheet.tsx
+│           sidebar.tsx
+│           skeleton.tsx
+│           sonner.tsx
+│           tabs.tsx
+│           toast.tsx
+│           toaster.tsx
+│           tooltip.tsx
+│           use-toast.tsx
+│
+├───hooks
+│       use-mobile.tsx
+│       use-toast.ts
+│
+└───lib
+    │   utils.ts
+    │
+    └───auth
+            backup-codes.ts
+            mfa.ts
+            password-reset.ts

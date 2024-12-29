@@ -232,77 +232,58 @@ const authOptions: AuthOptions = {
           return false;
         }
 
-        let userId = existingUser?.id;
+        // If no user exists, redirect to password setup
+        if (!existingUser) {
+          console.log("No existing user, redirecting to password setup");
+          const setupUrl = `/auth/setup-password?email=${encodeURIComponent(user.email!)}&name=${encodeURIComponent(user.name || '')}&provider=${account.provider}&provider_account_id=${account.providerAccountId}&avatar_url=${encodeURIComponent(user.image || '')}`;
+          return setupUrl;
+        }
+
+        let userId = existingUser.id;
         console.log("Existing user check result:", { userId, exists: !!userId });
 
-        // If no user exists in auth.users, create one
-        if (!userId) {
-          console.log("Creating new user in auth.users");
-          const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-            email: user.email!,
-            email_confirm: true,
-            user_metadata: {
-              full_name: user.name,
-              avatar_url: user.image,
-              provider: account.provider
-            },
+        // Check if user has profile initialized
+        console.log("Checking if user has profile initialized");
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select()
+          .eq("user_id", userId)
+          .single();
+
+        if (!profile) {
+          console.log("Profile not found, initializing tables for existing auth user");
+          await initializeUserTables(userId);
+        }
+
+        // Check if user has connected providers
+        const { data: oauthData } = await supabase
+          .from("oauth_accounts")
+          .select("provider")
+          .eq("user_id", userId);
+
+        const connectedProviders = oauthData?.map(account => account.provider) || [];
+        console.log("Connected providers:", connectedProviders);
+
+        // If no connected providers, add the current provider
+        if (!connectedProviders.includes(account.provider)) {
+          console.log("Adding new provider connection:", {
+            provider: account.provider,
+            userId,
+            providerAccountId: account.providerAccountId
+          });
+          
+          const { data: newAccount, error: insertError } = await supabase.from("oauth_accounts").insert({
+            user_id: userId,
+            provider: account.provider.toLowerCase(),
+            created_at: new Date().toISOString(),
+            provider_account_id: account.providerAccountId,
           });
 
-          if (createError) {
-            console.error("Error creating user:", createError);
-            return false;
+          if (insertError) {
+            console.error("Error adding connected provider:", insertError);
           }
 
-          userId = newUser.user.id;
-          console.log("Created new user with ID:", userId);
-
-          // Initialize other tables for the new user
-          await initializeUserTables(userId);
-        } else {
-          // Check if user has profile initialized
-          console.log("Checking if user has profile initialized");
-          const { data: profile } = await supabase
-            .from("user_profiles")
-            .select()
-            .eq("user_id", userId)
-            .single();
-
-
-          if (!profile) {
-            console.log("Profile not found, initializing tables for existing auth user");
-            await initializeUserTables(userId);
-          }
-
-          // Check if user has connected providers
-          const { data: oauthData } = await supabase
-            .from("oauth_accounts")
-            .select("provider")
-            .eq("user_id", userId);
-
-          const connectedProviders = oauthData?.map(account => account.provider) || [];
-          console.log("Connected providers:", connectedProviders);
-
-          // If no connected providers, add the current provider
-          if (!connectedProviders.includes(account.provider)) {
-            console.log("Adding new provider connection:", {
-              provider: account.provider,
-              userId,
-              providerAccountId: account.providerAccountId
-            });
-            
-            const { data: newAccount, error: insertError } = await supabase.from("oauth_accounts").insert({
-              user_id: userId,
-              provider: account.provider.toLowerCase(),
-              created_at: new Date().toISOString(),
-              provider_account_id: account.providerAccountId,
-            });
-
-            if (insertError) {
-              console.error("Error adding connected provider:", insertError);
-            }
-
-            console.log("Added connected provider result:", { newAccount, error: insertError });
-          }
+          console.log("Added connected provider result:", { newAccount, error: insertError });
         }
 
         // Check MFA status

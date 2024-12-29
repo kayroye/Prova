@@ -6,16 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { HelpCircle, Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash } from "lucide-react";
+
+interface FormEndpoint {
+  url: string;
+  parameters: string;
+}
 
 interface ApiFormProps {
-  onSubmit: (endpoints: Array<{url: string, parameters: string}>) => Promise<void>;
+  onSubmit: (endpoints: FormEndpoint[]) => Promise<void>;
   isLoading?: boolean;
 }
 
 export function ApiForm({ onSubmit, isLoading = false }: ApiFormProps) {
-  const [endpoints, setEndpoints] = useState<Array<{url: string, parameters: string}>>([{ url: "", parameters: "" }]);
+  const [endpoints, setEndpoints] = useState<FormEndpoint[]>([{ url: "", parameters: "" }]);
   const { toast } = useToast();
 
   const addEndpoint = () => {
@@ -29,7 +33,7 @@ export function ApiForm({ onSubmit, isLoading = false }: ApiFormProps) {
     }
   };
 
-  const updateEndpoint = (index: number, field: 'url' | 'parameters', value: string) => {
+  const updateEndpoint = (index: number, field: keyof FormEndpoint, value: string) => {
     const newEndpoints = endpoints.map((endpoint, i) => {
       if (i === index) {
         return { ...endpoint, [field]: value };
@@ -54,11 +58,13 @@ export function ApiForm({ onSubmit, isLoading = false }: ApiFormProps) {
 
     try {
       await onSubmit(endpoints);
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error('Unknown error occurred');
+      console.error("Failed to submit endpoints:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "An error occurred",
+        description: error.message,
       });
     }
   };
@@ -66,31 +72,15 @@ export function ApiForm({ onSubmit, isLoading = false }: ApiFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>API Endpoints</CardTitle>
-        <CardDescription>Enter the API endpoints you want to interact with</CardDescription>
+        <CardTitle>Start New Chat</CardTitle>
+        <CardDescription>Configure the API endpoints you want to interact with in this chat session</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {endpoints.map((endpoint, index) => (
             <div key={index} className="space-y-4 p-4 border rounded-lg relative">
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={`endpoint-${index}`}>Endpoint URL {index + 1}</Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-4 w-4">
-                          <HelpCircle className="h-3 w-3" />
-                          <span className="sr-only">Endpoint URL format help</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Enter a complete URL including the protocol (http/https)</p>
-                        <p className="text-xs text-muted-foreground mt-1">Example: https://api.example.com/v1/data</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
+                <Label htmlFor={`endpoint-${index}`}>Endpoint URL {index + 1}</Label>
                 <Input
                   id={`endpoint-${index}`}
                   placeholder="https://api.example.com/v1/endpoint"
@@ -100,30 +90,10 @@ export function ApiForm({ onSubmit, isLoading = false }: ApiFormProps) {
                 />
               </div>
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={`parameters-${index}`}>Parameters (Optional)</Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-4 w-4">
-                          <HelpCircle className="h-3 w-3" />
-                          <span className="sr-only">Parameters format help</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>You can:</p>
-                        <ul className="list-disc ml-4 text-xs space-y-1 mt-1">
-                          <li>Enter JSON parameters</li>
-                          <li>Describe what you want to do</li>
-                          <li>Leave empty for simple GET requests</li>
-                        </ul>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
+                <Label htmlFor={`parameters-${index}`}>Parameters</Label>
                 <Input
                   id={`parameters-${index}`}
-                  placeholder='{"key": "value"} or "Describe what you want to do"'
+                  placeholder='{"key": "value"}'
                   value={endpoint.parameters}
                   onChange={(e) => updateEndpoint(index, 'parameters', e.target.value)}
                   disabled={isLoading}
@@ -138,7 +108,7 @@ export function ApiForm({ onSubmit, isLoading = false }: ApiFormProps) {
                   onClick={() => removeEndpoint(index)}
                   disabled={isLoading}
                 >
-                  Remove
+                  <Trash className="h-4 w-4" />
                 </Button>
               )}
             </div>
@@ -151,6 +121,7 @@ export function ApiForm({ onSubmit, isLoading = false }: ApiFormProps) {
             disabled={isLoading}
             className="w-full"
           >
+            <Plus className="mr-2 h-4 w-4" />
             Add Another Endpoint
           </Button>
 

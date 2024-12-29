@@ -71,11 +71,19 @@
   - `created_at`: Timestamp
   - `updated_at`: Timestamp
 
+- **chat_messages**
+  - `id`: UUID
+  - `chat_session_id`: UUID (foreign key to ChatSession)
+  - `sender`: Enum (user, ai)
+  - `message`: Text
+  - `timestamp`: Timestamp
+
 ### Relationships
 
 - **User** has many **APIEndpoints**.
 - **User** has one **Subscription**.
 - **User** has one **UserProfile**.
 - **User** has one **UserMFA**.
+- **ChatSession** has many **ChatMessages**.
 
 ---
