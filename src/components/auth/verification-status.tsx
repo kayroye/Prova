@@ -28,7 +28,7 @@ export function VerificationStatus() {
       if (errorCode === 'otp_expired') {
         toast({
           title: "Link Expired",
-          description: "The verification link has expired. Please try signing up again.",
+          description: "This verification link has expired. Try logging in or signing up again.",
           variant: "destructive",
           duration: 5000,
         });

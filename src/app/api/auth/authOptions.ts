@@ -54,6 +54,40 @@ async function initializeUserTables(userId: string) {
       throw new Error(`Failed to initialize API usage: ${usageError.message}`);
     }
 
+    // Add example API endpoints
+    const exampleEndpoints = [
+      {
+        user_id: userId,
+        url: "https://talk-to-api.vercel.app/api/example/8ball",
+        parameters: "{ name: 'question', type: 'string', required: false }",
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        user_id: userId,
+        url: "https://talk-to-api.vercel.app/api/example/funfact",
+        parameters: null,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        user_id: userId,
+        url: "https://talk-to-api.vercel.app/api/example/random",
+        parameters: "{ name: 'min', type: 'number', required: false }, { name: 'max', type: 'number', required: false }",
+        created_at: now,
+        updated_at: now,
+      }
+    ];
+
+    const { error: endpointsError } = await supabase
+      .from("api_endpoints")
+      .insert(exampleEndpoints);
+
+    if (endpointsError) {
+      console.error("Error adding example endpoints:", endpointsError);
+      throw new Error(`Failed to add example endpoints: ${endpointsError.message}`);
+    }
+
     // Create default chat session
     const { error: chatError } = await supabase
       .from("chat_sessions")

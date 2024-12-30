@@ -41,31 +41,44 @@ export function ApiHistory({ calls }: ApiHistoryProps) {
       <h2 className="text-lg font-semibold mb-4">API Call History</h2>
       <div className="space-y-4">
         {calls.map((call) => (
-          <div key={call.id} className="border rounded-lg p-4">
-            <div className="flex justify-between items-start">
-              <div className="space-y-2 flex-1">
-                <button 
-                  onClick={() => toggleCall(call.id)}
-                  className="flex items-center gap-2 hover:text-blue-600 transition-colors"
-                >
-                  <span className={`transform transition-transform ${
-                    expandedCalls.has(call.id) ? 'rotate-90' : ''
-                  }`}>▶</span>
-                  <p className="font-medium">
-                    {new Date(call.timestamp).toLocaleString()}
-                  </p>
-                </button>
+          <div key={call.id} className="border rounded-lg p-2 sm:p-3 md:p-4">
+            <div className="flex flex-col lg:flex-row justify-between items-start gap-2">
+              <div className="space-y-2 w-full">
+                <div className="flex items-center justify-between gap-2">
+                  <button 
+                    onClick={() => toggleCall(call.id)}
+                    className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+                  >
+                    <span className={`transform transition-transform ${
+                      expandedCalls.has(call.id) ? 'rotate-90' : ''
+                    }`}>▶</span>
+                    <p className="font-medium text-sm sm:text-base">
+                      {new Date(call.timestamp).toLocaleString()}
+                    </p>
+                  </button>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                      call.status === "success"
+                        ? "bg-green-100 text-green-800"
+                        : call.status === "error"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {call.status}
+                  </span>
+                </div>
                 {call.endpoints.map((endpoint) => (
-                  <div key={endpoint.id} className="space-y-1">
-                    <p className="font-medium text-sm">{endpoint.url}</p>
+                  <div key={endpoint.id} className="space-y-1 w-full">
+                    <p className="font-medium text-sm break-all pr-2">{endpoint.url}</p>
                     {expandedCalls.has(call.id) && (
                       <>
                         {call.response && (
                           <div className="text-sm space-y-1">
                             <p className="text-muted-foreground font-medium">Response:</p>
-                            <div className="max-w-full">
-                              <pre className="bg-muted p-2 rounded-md whitespace-pre-wrap break-words">
-                                <code className="block">
+                            <div className="w-full overflow-x-auto">
+                              <pre className="bg-muted p-2 rounded-md whitespace-pre-wrap break-words min-w-0 max-w-full">
+                                <code className="block text-xs sm:text-sm">
                                   {call.response}
                                 </code>
                               </pre>
@@ -75,9 +88,9 @@ export function ApiHistory({ calls }: ApiHistoryProps) {
                         {endpoint.parameters && (
                           <div className="text-sm space-y-1">
                             <p className="text-muted-foreground font-medium">Request:</p>
-                            <div className="max-w-full">
-                              <pre className="bg-muted p-2 rounded-md whitespace-pre-wrap break-words">
-                                <code className="block">
+                            <div className="w-full overflow-x-auto">
+                              <pre className="bg-muted p-2 rounded-md whitespace-pre-wrap break-words min-w-0 max-w-full">
+                                <code className="block text-xs sm:text-sm">
                                   {endpoint.parameters}
                                 </code>
                               </pre>
@@ -89,24 +102,15 @@ export function ApiHistory({ calls }: ApiHistoryProps) {
                   </div>
                 ))}
               </div>
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  call.status === "success"
-                    ? "bg-green-100 text-green-800"
-                    : call.status === "error"
-                    ? "bg-red-100 text-red-800"
-                    : "bg-yellow-100 text-yellow-800"
-                }`}
-              >
-                {call.status}
-              </span>
             </div>
             {call.error && (
               <div className="mt-2 space-y-1">
                 <p className="text-sm text-muted-foreground font-medium">Error:</p>
-                <p className="text-sm text-red-600 bg-red-50 p-2 rounded-md">
-                  {call.error}
-                </p>
+                <div className="w-full overflow-x-auto">
+                  <p className="text-sm text-red-600 bg-red-50 p-2 rounded-md whitespace-pre-wrap break-words">
+                    {call.error}
+                  </p>
+                </div>
               </div>
             )}
           </div>

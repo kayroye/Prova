@@ -14,6 +14,7 @@ export async function POST(request: Request) {
 
   try {
     const { endpoints } = await request.json();
+    console.log("endpoints", endpoints);
 
     if (!Array.isArray(endpoints)) {
       return new NextResponse("Invalid endpoints format", { status: 400 });

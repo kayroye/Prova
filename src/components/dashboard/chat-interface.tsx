@@ -33,6 +33,7 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [chatId, setChatId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -41,7 +42,20 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
   useEffect(() => {
     const savedChatId = localStorage.getItem(CHAT_SESSION_KEY);
     if (savedChatId) {
-      setChatId(savedChatId);
+      // Verify if the chat session exists before setting it
+      fetch(`/api/chat/messages/${savedChatId}`)
+        .then(response => {
+          if (!response.ok) {
+            // If session doesn't exist, remove it from localStorage
+            localStorage.removeItem(CHAT_SESSION_KEY);
+            return;
+          }
+          setChatId(savedChatId);
+        })
+        .catch(() => {
+          // On error, remove the invalid session
+          localStorage.removeItem(CHAT_SESSION_KEY);
+        });
     }
   }, []);
 
@@ -80,6 +94,7 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
   }, [selectedEndpoints, toast]);
 
   const loadExistingMessages = useCallback(async (sessionId: string) => {
+    setIsLoadingMessages(true);
     try {
       const response = await fetch(`/api/chat/messages/${sessionId}`);
       if (!response.ok) throw new Error("Failed to load messages");
@@ -107,13 +122,17 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
       setMessages(formattedMessages);
     } catch (error) {
       console.error("Failed to load messages:", error);
+    } finally {
+      setIsLoadingMessages(false);
     }
   }, []);
 
   useEffect(() => {
     if (selectedEndpoints?.length) {
-      // Create a new chat session when endpoints are selected and no chat is active
-      if (!chatId) {
+      // Only create a new chat session if we don't have a valid chatId
+      // and there's no saved chat in localStorage
+      const savedChatId = localStorage.getItem(CHAT_SESSION_KEY);
+      if (!chatId && !savedChatId) {
         createChatSession();
       }
     }
@@ -218,79 +237,81 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
           New Chat
         </Button>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-        {!selectedEndpoints?.length ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden relative">
+        {!selectedEndpoints?.length && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center text-muted-foreground">
             Add an API endpoint to get started.
           </div>
-        ) : (
-          <>
-            <ScrollArea className="flex-1 overflow-y-auto">
-              <div className="flex flex-col space-y-4 px-6 py-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.role === "user" ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-lg p-3 ${
-                        message.role === "user"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
-                      }`}
-                    >
-                      <div className={`prose prose-sm max-w-none ${
-                        message.role === "user"
-                          ? "[&_*]:text-primary-foreground"
-                          : "dark:prose-invert"
-                      }`}>
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
-                      </div>
-                      <p className="text-xs mt-1 opacity-70">
-                        {new Date(message.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            </ScrollArea>
-
-            <div className="flex gap-2 px-6 pb-6 pt-4">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleNewChat}
-                disabled={!selectedEndpoints?.length}
-                className="sm:hidden h-10"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder="Type your message..."
-                className="resize-none h-10 min-h-0 py-2 px-3"
-                disabled={isLoading || !chatId}
-              />
-              <Button
-                onClick={handleSubmit}
-                disabled={isLoading || !input.trim() || !chatId}
-                size="icon"
-                className="h-10 w-10 shrink-0"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </>
         )}
+        {isLoadingMessages && (
+          <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+        <ScrollArea className="flex-1 overflow-y-auto">
+          <div className="flex flex-col space-y-4 px-6 py-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${
+                  message.role === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-lg p-3 ${
+                    message.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
+                  }`}
+                >
+                  <div className={`prose prose-sm max-w-none ${
+                    message.role === "user"
+                      ? "[&_*]:text-primary-foreground"
+                      : "dark:prose-invert"
+                  }`}>
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  </div>
+                  <p className="text-xs mt-1 opacity-70">
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
+
+        <div className="flex gap-2 px-6 pb-6 pt-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleNewChat}
+            disabled={!selectedEndpoints?.length}
+            className="sm:hidden h-10"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder={selectedEndpoints?.length ? "Type your message..." : "Add an API endpoint to get started"}
+            className="resize-none h-10 min-h-0 py-2 px-3"
+            disabled={isLoading || !chatId || !selectedEndpoints?.length}
+          />
+          <Button
+            onClick={handleSubmit}
+            disabled={isLoading || !input.trim() || !chatId || !selectedEndpoints?.length}
+            size="icon"
+            className="h-10 w-10 shrink-0"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
