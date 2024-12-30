@@ -52,6 +52,7 @@ export default async function APIHistory() {
     status: log.status,
     timestamp: new Date(log.created_at),
     error: log.error,
+    response: log.response,
   }));
 
   return (

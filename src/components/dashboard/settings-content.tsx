@@ -31,7 +31,6 @@ export function SettingsContent({ userId }: SettingsContentProps) {
         const response = await fetch("/api/auth/settings")
         if (!response.ok) throw new Error("Failed to load settings")
         const data = await response.json()
-        console.log("Loaded settings:", data)
         setSettings(data)
       } catch (err) {
         toast.error(`Failed to load settings: ${(err as Error).message}`)

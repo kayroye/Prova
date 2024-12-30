@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Plus } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from "react-markdown";
@@ -17,9 +17,17 @@ interface Message {
   timestamp: Date;
 }
 
+interface ChatMessage {
+  sender: "user" | "ai";
+  message: string;
+  created_at: string;
+}
+
 interface ChatInterfaceProps {
   selectedEndpoints?: Array<{id: string, url: string, parameters?: string}>;
 }
+
+const CHAT_SESSION_KEY = 'currentChatSession';
 
 export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -28,6 +36,14 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
   const [chatId, setChatId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Load chat session from localStorage on mount
+  useEffect(() => {
+    const savedChatId = localStorage.getItem(CHAT_SESSION_KEY);
+    if (savedChatId) {
+      setChatId(savedChatId);
+    }
+  }, []);
 
   const createChatSession = useCallback(async () => {
     try {
@@ -41,6 +57,7 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
 
       const data = await response.json();
       setChatId(data.chatSessionId);
+      localStorage.setItem(CHAT_SESSION_KEY, data.chatSessionId);
 
       // Add initial system message
       if (data.message) {
@@ -62,12 +79,51 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
     }
   }, [selectedEndpoints, toast]);
 
+  const loadExistingMessages = useCallback(async (sessionId: string) => {
+    try {
+      const response = await fetch(`/api/chat/messages/${sessionId}`);
+      if (!response.ok) throw new Error("Failed to load messages");
+
+      const data = await response.json();
+      const formattedMessages = data.messages.map((msg: ChatMessage) => {
+        let content = msg.message;
+        if (msg.sender === "ai") {
+          try {
+            content = JSON.parse(msg.message);
+          } catch {
+            // If parsing fails, use the message as is
+            content = msg.message;
+          }
+        }
+        
+        return {
+          id: uuidv4(),
+          role: msg.sender === "user" ? "user" : "assistant",
+          content,
+          timestamp: new Date(msg.created_at),
+        };
+      });
+
+      setMessages(formattedMessages);
+    } catch (error) {
+      console.error("Failed to load messages:", error);
+    }
+  }, []);
+
   useEffect(() => {
     if (selectedEndpoints?.length) {
-      // Create a new chat session when endpoints are selected
-      createChatSession();
+      // Create a new chat session when endpoints are selected and no chat is active
+      if (!chatId) {
+        createChatSession();
+      }
     }
-  }, [selectedEndpoints, createChatSession]);
+  }, [selectedEndpoints, createChatSession, chatId]);
+
+  useEffect(() => {
+    if (chatId) {
+      loadExistingMessages(chatId);
+    }
+  }, [chatId, loadExistingMessages]);
 
   useEffect(() => {
     scrollToBottom();
@@ -75,6 +131,13 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleNewChat = () => {
+    setChatId(null);
+    setMessages([]);
+    localStorage.removeItem(CHAT_SESSION_KEY);
+    createChatSession();
   };
 
   const handleSubmit = async () => {
@@ -109,10 +172,14 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
       const data = await response.json();
       
       if (data.message) {
+        const content = typeof data.message.content === 'string' 
+          ? data.message.content 
+          : JSON.stringify(data.message.content);
+          
         setMessages((prev) => [...prev, {
           id: uuidv4(),
           role: "assistant",
-          content: typeof data.message.content === 'string' ? data.message.content : JSON.stringify(data.message.content),
+          content,
           timestamp: new Date(),
         }]);
       }
@@ -138,64 +205,92 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
 
   return (
     <Card className="h-[600px] flex flex-col">
-      <CardHeader>
-        <CardTitle>Chat Interface</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between space-x-2">
+        <CardTitle>Talk to Your APIs</CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleNewChat}
+          disabled={!selectedEndpoints?.length}
+          className="hidden sm:flex"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          New Chat
+        </Button>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-        <ScrollArea className="flex-1 overflow-y-auto">
-          <div className="flex flex-col space-y-4 px-6 py-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                  }`}
-                >
-                  <div className={`prose prose-sm max-w-none ${
-                    message.role === "user"
-                      ? "[&_*]:text-primary-foreground"
-                      : "dark:prose-invert"
-                  }`}>
-                    <ReactMarkdown>{message.content}</ReactMarkdown>
-                  </div>
-                  <p className="text-xs mt-1 opacity-70">
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </p>
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
+        {!selectedEndpoints?.length ? (
+          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+            Add an API endpoint to get started.
           </div>
-        </ScrollArea>
+        ) : (
+          <>
+            <ScrollArea className="flex-1 overflow-y-auto">
+              <div className="flex flex-col space-y-4 px-6 py-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${
+                      message.role === "user" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-lg p-3 ${
+                        message.role === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted"
+                      }`}
+                    >
+                      <div className={`prose prose-sm max-w-none ${
+                        message.role === "user"
+                          ? "[&_*]:text-primary-foreground"
+                          : "dark:prose-invert"
+                      }`}>
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      </div>
+                      <p className="text-xs mt-1 opacity-70">
+                        {new Date(message.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
 
-        <div className="flex gap-2 px-6 pb-6 pt-4">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Type your message..."
-            className="resize-none"
-            disabled={isLoading || !chatId}
-          />
-          <Button
-            onClick={handleSubmit}
-            disabled={isLoading || !input.trim() || !chatId}
-            size="icon"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
+            <div className="flex gap-2 px-6 pb-6 pt-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleNewChat}
+                disabled={!selectedEndpoints?.length}
+                className="sm:hidden h-10"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Type your message..."
+                className="resize-none h-10 min-h-0 py-2 px-3"
+                disabled={isLoading || !chatId}
+              />
+              <Button
+                onClick={handleSubmit}
+                disabled={isLoading || !input.trim() || !chatId}
+                size="icon"
+                className="h-10 w-10 shrink-0"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

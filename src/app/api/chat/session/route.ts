@@ -37,11 +37,7 @@ export async function POST(request: Request) {
     }
 
     // Create initial message
-    const initialMessage = `Hello! I see you've provided ${endpoints.length} API endpoint${
-      endpoints.length > 1 ? "s" : ""
-    }. How would you like to interact with ${
-      endpoints.length > 1 ? "them" : "it"
-    }?`;
+    const initialMessage = `How would you like to interact with your APIs?`;
 
     const { error: messageError } = await supabase
       .from("chat_messages")

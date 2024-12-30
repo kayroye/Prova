@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Trash, MessageSquare } from "lucide-react";
+import { Loader2, Plus, Trash } from "lucide-react";
+import { Dispatch, SetStateAction } from "react";
 
 interface APIEndpoint {
   id: string;
@@ -18,36 +19,15 @@ interface APIEndpoint {
 }
 
 interface ApiManagementProps {
-  onStartChat?: (endpoints: APIEndpoint[]) => void;
+  endpoints: APIEndpoint[];
+  setEndpoints: Dispatch<SetStateAction<APIEndpoint[]>>;
 }
 
-export function ApiManagement({ onStartChat }: ApiManagementProps) {
-  const [endpoints, setEndpoints] = useState<APIEndpoint[]>([]);
+export function ApiManagement({ endpoints, setEndpoints }: ApiManagementProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [newUrl, setNewUrl] = useState("");
   const [newParameters, setNewParameters] = useState("");
   const { toast } = useToast();
-
-  useEffect(() => {
-    fetchEndpoints();
-  }, []);
-
-  const fetchEndpoints = async () => {
-    try {
-      const response = await fetch("/api/endpoints");
-      if (!response.ok) throw new Error("Failed to fetch endpoints");
-      const data = await response.json();
-      setEndpoints(data);
-    } catch (err: unknown) {
-      const error = err instanceof Error ? err : new Error('Unknown error occurred');
-      console.error("Failed to fetch endpoints:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load API endpoints",
-      });
-    }
-  };
 
   const handleAddEndpoint = async () => {
     if (!newUrl.trim()) {
@@ -69,9 +49,10 @@ export function ApiManagement({ onStartChat }: ApiManagementProps) {
 
       if (!response.ok) throw new Error("Failed to add endpoint");
 
+      const newEndpoint = await response.json();
+      setEndpoints(prev => [...prev, newEndpoint]);
       setNewUrl("");
       setNewParameters("");
-      await fetchEndpoints();
       
       toast({
         title: "Success",
@@ -98,7 +79,7 @@ export function ApiManagement({ onStartChat }: ApiManagementProps) {
 
       if (!response.ok) throw new Error("Failed to delete endpoint");
 
-      await fetchEndpoints();
+      setEndpoints(prev => prev.filter(endpoint => endpoint.id !== id));
       
       toast({
         title: "Success",
@@ -178,14 +159,6 @@ export function ApiManagement({ onStartChat }: ApiManagementProps) {
                   )}
                 </div>
                 <div className="flex items-center gap-2 ml-4 shrink-0">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => onStartChat?.([endpoint])}
-                    title="Start Chat with this API"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                  </Button>
                   <Button
                     variant="destructive"
                     size="icon"

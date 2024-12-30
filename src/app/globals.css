@@ -91,3 +91,19 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.markdown-container pre {
+  white-space: pre-wrap; /* Allows wrapping of long lines */
+  word-wrap: break-word; /* Breaks long words to prevent overflow */
+  overflow-x: auto;      /* Adds horizontal scroll if necessary */
+  background-color: #f5f5f5; /* Optional: Light background for code blocks */
+  padding: 1em;                /* Optional: Padding for better readability */
+  border-radius: 5px;          /* Optional: Rounded corners */
+}
+
+.markdown-container code {
+  white-space: pre-wrap; /* Allows wrapping within inline code */
+  word-wrap: break-word; /* Breaks long words to prevent overflow */
+}
+
+
