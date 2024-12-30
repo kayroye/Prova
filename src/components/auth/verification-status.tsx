@@ -1,26 +1,10 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Icons } from "@/components/ui/icons";
-
-interface VerificationStatus {
-  type: 'success' | 'error';
-  title: string;
-  message: string;
-}
+import { useEffect } from 'react';
+import { useToast } from "@/hooks/use-toast";
 
 export function VerificationStatus() {
-  const [status, setStatus] = useState<VerificationStatus | null>(null);
-  const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Get the hash parameters from the URL
@@ -29,10 +13,11 @@ export function VerificationStatus() {
 
     // Check for success case (access_token present)
     if (params.get('access_token')) {
-      setStatus({
-        type: 'success',
-        title: 'Email Verified',
-        message: 'Your email has been successfully verified. You can now log in to your account.',
+      toast({
+        title: "Email Verified",
+        description: "Your email has been successfully verified. You can now log in to your account.",
+        variant: "default",
+        duration: 5000,
       });
     }
     // Check for error cases
@@ -41,47 +26,27 @@ export function VerificationStatus() {
       const errorDesc = params.get('error_description');
 
       if (errorCode === 'otp_expired') {
-        setStatus({
-          type: 'error',
-          title: 'Link Expired',
-          message: 'The verification link has expired. Please try signing up again.',
+        toast({
+          title: "Link Expired",
+          description: "The verification link has expired. Please try signing up again.",
+          variant: "destructive",
+          duration: 5000,
         });
       } else {
-        setStatus({
-          type: 'error',
-          title: 'Verification Failed',
-          message: errorDesc?.replace(/\+/g, ' ') || 'An error occurred during verification.',
+        toast({
+          title: "Verification Failed",
+          description: errorDesc?.replace(/\+/g, ' ') || 'An error occurred during verification.',
+          variant: "destructive",
+          duration: 5000,
         });
       }
     }
-  }, []);
 
-  if (!status) return null;
+    // Clear the hash from the URL
+    if (params.get('access_token') || params.get('error')) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [toast]);
 
-  return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {status.type === 'success' ? (
-            <Icons.checkCircle className="h-5 w-5 text-green-500" />
-          ) : (
-            <Icons.xCircle className="h-5 w-5 text-red-500" />
-          )}
-          {status.title}
-        </CardTitle>
-        <CardDescription>{status.message}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex justify-center">
-        <Button
-          onClick={() => {
-            // Clear the hash and go to login
-            window.history.replaceState({}, '', window.location.pathname);
-            router.push('/login');
-          }}
-        >
-          Go to Login
-        </Button>
-      </CardContent>
-    </Card>
-  );
+  return null;
 } 
