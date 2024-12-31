@@ -52,10 +52,11 @@
   - `id`: UUID
   - `user_id`: UUID (foreign key to User)
   - `endpoint_id`: UUID (foreign key to APIEndpoint)
-  - `status`: String
+  - `status`: Integer
   - `request`: JSON
   - `response`: JSON
   - `error`: JSON
+  - `method`: String
   - `created_at`: Timestamp
 
 - **api_usage**

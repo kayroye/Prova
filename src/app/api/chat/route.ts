@@ -129,13 +129,13 @@ export async function POST(request: Request) {
 
       let apiResponseData;
       let apiResponse;
+      let statusCode;
       const now = new Date().toISOString();
 
       try {
         // Make the actual API call
         let url = endpoint.url;
         if (method === 'GET' && parameters) {
-          // For GET requests, append parameters to URL
           const queryParams = new URLSearchParams(JSON.parse(parameters));
           url = `${url}${url.includes('?') ? '&' : '?'}${queryParams.toString()}`;
         }
@@ -147,18 +147,22 @@ export async function POST(request: Request) {
             'Content-Type': 'application/json',
           },
         });
+        statusCode = apiResponse.status;
 
         apiResponseData = await apiResponse.text();
 
         // Log successful API call
-        const { error } = await supabase.from("api_logs").insert([{
+        const { error, data } = await supabase.from("api_logs").insert([{
           user_id: session.user.id,
           endpoint_id: endpointId,
           request: parameters,
           response: apiResponseData,
-          status: apiResponse.status >= 200 && apiResponse.status < 300 ? "success" : "error",
+          status: statusCode,
           created_at: now,
+          method: method,
         }]);
+
+        console.log("API Log Data:", data);
 
         if (error) {
           console.error("Error logging API call:", error);
@@ -172,8 +176,9 @@ export async function POST(request: Request) {
           endpoint_id: endpointId,
           request: parameters,
           error: error instanceof Error ? error.message : "Unknown error",
-          status: "error",
+          status: statusCode || 500, // Use captured status or default to 500
           created_at: now,
+          method: method,
         }]);
 
         throw error;

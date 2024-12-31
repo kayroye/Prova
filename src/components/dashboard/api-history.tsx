@@ -11,10 +11,11 @@ interface Endpoint {
 interface APICall {
   id: string;
   endpoints: Endpoint[];
-  status: string;
+  status: number;
   timestamp: Date;
   error?: string;
   response?: string;
+  method: string;
 }
 
 interface ApiHistoryProps {
@@ -58,14 +59,14 @@ export function ApiHistory({ calls }: ApiHistoryProps) {
                   </button>
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                      call.status === "success"
-                        ? "bg-green-100 text-green-800"
-                        : call.status === "error"
+                      call.status >= 200 && call.status < 300
+                        ? "bg-blue-100 text-blue-800"
+                        : call.status >= 400 && call.status < 500
                         ? "bg-red-100 text-red-800"
                         : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    {call.status}
+                    {call.method?.toUpperCase() || 'UNKNOWN'}
                   </span>
                 </div>
                 {call.endpoints.map((endpoint) => (

@@ -30,6 +30,7 @@ export default async function APIHistory() {
       response,
       error,
       created_at,
+      method,
       api_endpoints!inner (
         url,
         parameters
@@ -53,6 +54,7 @@ export default async function APIHistory() {
     timestamp: new Date(log.created_at),
     error: log.error,
     response: log.response,
+    method: log.method,
   }));
 
   return (

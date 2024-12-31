@@ -3,6 +3,7 @@ import { Hero } from "@/components/landing/Hero"
 import { Features } from "@/components/landing/Features"
 import { Demo } from "@/components/landing/Demo"
 import { Footer } from "@/components/landing/Footer"
+import { Pricing } from "@/components/landing/Pricing"
 
 export const metadata: Metadata = {
   title: "TalkToAPI - Interact with APIs Effortlessly",
@@ -17,6 +18,7 @@ export default function Home() {
         <Hero />
         <Demo />
         <Features />
+        <Pricing />
       </main>
       <Footer />
     </div>

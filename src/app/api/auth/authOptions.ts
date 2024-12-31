@@ -76,6 +76,13 @@ async function initializeUserTables(userId: string) {
         parameters: "{ name: 'min', type: 'number', required: false }, { name: 'max', type: 'number', required: false }",
         created_at: now,
         updated_at: now,
+      },
+      {
+        user_id: userId,
+        url: "https://talk-to-api.vercel.app/api/example/echo",
+        parameters: "{ message: 'string', timestamp: 'number', metadata?: { source: 'string', tags: 'string[]' } }",
+        created_at: now,
+        updated_at: now,
       }
     ];
 
