@@ -247,7 +247,7 @@ To install all the necessary Shadcn UI components, follow these steps:
 
    const Header = () => (
      <header className="flex justify-between p-4">
-       <h1 className="text-xl font-bold">TalkToAPI</h1>
+       <h1 className="text-xl font-bold">Prova</h1>
        <div>
          <Button variant="primary">Sign Up</Button>
          <Button variant="secondary">Login</Button>

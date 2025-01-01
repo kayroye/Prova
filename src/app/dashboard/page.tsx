@@ -5,7 +5,7 @@ import { DashboardWrapper } from "@/components/dashboard/dashboard-wrapper";
 import authOptions from "@/app/api/auth/authOptions";
 
 export const metadata: Metadata = {
-  title: "Dashboard - TalkToAPI",
+  title: "Dashboard - Prova",
   description: "Interact with APIs through natural language",
 };
 

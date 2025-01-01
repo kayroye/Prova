@@ -5,7 +5,7 @@ import authOptions from "@/app/api/auth/authOptions"
 import { SettingsContent } from "@/components/dashboard/settings-content"
 
 export const metadata: Metadata = {
-  title: "Settings - TalkToAPI",
+  title: "Settings - Prova",
   description: "Manage your account settings and security",
 }
 

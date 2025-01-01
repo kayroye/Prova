@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import { SetupPasswordForm } from "@/components/auth/setup-password-form"
 
 export const metadata: Metadata = {
-  title: "Setup Password - TalkToAPI",
+  title: "Setup Password - Prova",
   description: "Set up your account password",
 }
 

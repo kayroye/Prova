@@ -35,7 +35,7 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [chatId, setChatId] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   // Load chat session from localStorage on mount
@@ -144,13 +144,18 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
     }
   }, [chatId, loadExistingMessages]);
 
+  const scrollToBottom = useCallback(() => {
+    if (scrollContainerRef.current) {
+      requestAnimationFrame(() => {
+        const lastChild = scrollContainerRef.current?.lastElementChild;
+        lastChild?.scrollIntoView({ behavior: "smooth", block: "end" });
+      });
+    }
+  }, []);
+
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, [messages, scrollToBottom]);
 
   const handleNewChat = () => {
     setChatId(null);
@@ -249,7 +254,7 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
           </div>
         )}
         <ScrollArea className="flex-1 overflow-y-auto">
-          <div className="flex flex-col space-y-4 px-6 py-4">
+          <div ref={scrollContainerRef} className="flex flex-col space-y-4 px-6 py-4">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -277,7 +282,6 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
                 </div>
               </div>
             ))}
-            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
 

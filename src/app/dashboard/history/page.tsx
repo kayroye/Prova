@@ -6,7 +6,7 @@ import authOptions from "@/app/api/auth/authOptions";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "API History - TalkToAPI",
+  title: "API History - Prova",
   description: "View your API interaction history",
 };
 

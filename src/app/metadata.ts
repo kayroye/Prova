@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "TalkToAPI",
+  title: "Prova",
   description: "Interact with APIs through natural conversations",
 } 

@@ -21,10 +21,12 @@ interface ChatEndpoint {
   parameters?: string;
 }
 
-const SELECTED_ENDPOINTS_KEY = 'selectedEndpoints';
+const SELECTED_ENDPOINTS_KEY = "selectedEndpoints";
 
 export function DashboardWrapper() {
-  const [selectedEndpoints, setSelectedEndpoints] = useState<ChatEndpoint[]>([]);
+  const [selectedEndpoints, setSelectedEndpoints] = useState<ChatEndpoint[]>(
+    []
+  );
   const [endpoints, setEndpoints] = useState<StoredEndpoint[]>([]);
 
   // Load selected endpoints from localStorage on mount
@@ -38,7 +40,10 @@ export function DashboardWrapper() {
   // Save selected endpoints to localStorage whenever they change
   useEffect(() => {
     if (selectedEndpoints.length > 0) {
-      localStorage.setItem(SELECTED_ENDPOINTS_KEY, JSON.stringify(selectedEndpoints));
+      localStorage.setItem(
+        SELECTED_ENDPOINTS_KEY,
+        JSON.stringify(selectedEndpoints)
+      );
     }
   }, [selectedEndpoints]);
 
@@ -52,12 +57,18 @@ export function DashboardWrapper() {
         setEndpoints(data);
 
         // Only set selected endpoints if none are currently selected and none are in localStorage
-        if (data.length > 0 && selectedEndpoints.length === 0 && !localStorage.getItem(SELECTED_ENDPOINTS_KEY)) {
-          const chatEndpoints: ChatEndpoint[] = data.map((e: StoredEndpoint) => ({
-            id: e.id,
-            url: e.url,
-            parameters: e.parameters || undefined
-          }));
+        if (
+          data.length > 0 &&
+          selectedEndpoints.length === 0 &&
+          !localStorage.getItem(SELECTED_ENDPOINTS_KEY)
+        ) {
+          const chatEndpoints: ChatEndpoint[] = data.map(
+            (e: StoredEndpoint) => ({
+              id: e.id,
+              url: e.url,
+              parameters: e.parameters || undefined,
+            })
+          );
           setSelectedEndpoints(chatEndpoints);
         }
       } catch (error) {
@@ -70,12 +81,12 @@ export function DashboardWrapper() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <div className="lg:col-span-4">
-        <ApiManagement endpoints={endpoints} setEndpoints={setEndpoints} />
-      </div>
       <div className="lg:col-span-8">
         <DashboardContent selectedEndpoints={selectedEndpoints} />
       </div>
+      <div className="lg:col-span-4">
+        <ApiManagement endpoints={endpoints} setEndpoints={setEndpoints} />
+      </div>
     </div>
   );
-} 
+}

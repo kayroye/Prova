@@ -112,7 +112,7 @@ export function Header() {
           
           <Link href="/" className="flex items-center group">
             <span className="text-xl md:text-2xl font-bold relative after:content-[''] after:absolute after:w-0 after:h-[2px] after:bottom-0 after:left-0 after:bg-primary after:transition-all after:duration-300 group-hover:after:w-full">
-              TalkToAPI
+              Prova
             </span>
           </Link>
 

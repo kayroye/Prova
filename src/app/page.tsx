@@ -2,11 +2,10 @@ import { Metadata } from "next"
 import { Hero } from "@/components/landing/Hero"
 import { Features } from "@/components/landing/Features"
 import { Demo } from "@/components/landing/Demo"
-import { Footer } from "@/components/landing/Footer"
 import { Pricing } from "@/components/landing/Pricing"
 
 export const metadata: Metadata = {
-  title: "TalkToAPI - Interact with APIs Effortlessly",
+  title: "Prova - Interact with APIs Effortlessly",
   description: "Leverage the power of conversational interfaces to manage your API interactions. Test, debug, and interact with APIs using natural language.",
   keywords: "API, LLM, conversation, testing, debugging, developer tools",
 }
@@ -20,7 +19,6 @@ export default function Home() {
         <Features />
         <Pricing />
       </main>
-      <Footer />
     </div>
   )
 }

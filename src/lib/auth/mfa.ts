@@ -35,7 +35,7 @@ export async function setupMFA(userId: string) {
   return {
     secret,
     backupCodes,
-    otpauthUrl: authenticator.keyuri("user", "TalkToAPI", secret),
+    otpauthUrl: authenticator.keyuri("user", "Prova", secret),
   };
 }
 

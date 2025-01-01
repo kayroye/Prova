@@ -106,4 +106,15 @@ body {
   word-wrap: break-word; /* Breaks long words to prevent overflow */
 }
 
+/* Ensure the parent containers allow the ScrollArea to occupy remaining space */
+.flex-1 {
+  flex: 1 1 0%;
+}
+
+/* Example CSS for ScrollArea */
+.scroll-area {
+  overflow-y: auto;
+  height: 100%;
+}
+
 
