@@ -43,13 +43,15 @@ export default async function Profile() {
     <div className="flex-1">
       <main className="flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <h1 className="text-2xl font-bold mb-6">Profile</h1>
+          
           <div className="flex items-center gap-4 mb-8">
             <Avatar className="h-20 w-20">
               <AvatarImage src={session.user.image || undefined} />
               <AvatarFallback>{session.user.name?.[0] || session.user.email?.[0]}</AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-2xl font-bold">{session.user.name || session.user.email}</h1>
+              <h2 className="text-xl font-semibold">{session.user.name || session.user.email}</h2>
               <p className="text-muted-foreground">Member since {new Date(userData.profile?.created_at || Date.now()).toLocaleDateString()}</p>
             </div>
           </div>

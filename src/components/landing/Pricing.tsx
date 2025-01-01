@@ -27,7 +27,6 @@ const pricingCategories: PricingCategory[] = [
       { name: "Indefinite chat history", free: false, pro: true },
       { name: "Priority in OpenAI queue", free: false, pro: true },
       { name: "50 messages per chat session", free: true, pro: true },
-      { name: "3 active chat sessions", free: true, pro: true },
       { name: "7-day chat history", free: true, pro: true },
     ],
   },

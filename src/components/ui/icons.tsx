@@ -4,6 +4,7 @@ import {
   ExternalLink,
   CheckCircle,
   XCircle,
+  ArrowRight,
 } from "lucide-react";
 import type { IconType } from "react-icons";
 import { FcGoogle } from "react-icons/fc";
@@ -17,4 +18,5 @@ export const Icons = {
   externalLink: ExternalLink,
   checkCircle: CheckCircle,
   xCircle: XCircle,
+  arrowRight: ArrowRight,
 } as const; 

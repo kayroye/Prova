@@ -29,7 +29,7 @@ const navItems = [
     description: "View and manage your API endpoints"
   },
   { 
-    href: "/dashboard/history", 
+    href: "/history", 
     icon: History, 
     label: "API History",
     description: "See your past API interactions"
@@ -41,7 +41,7 @@ const navItems = [
     description: "Manage your account settings"
   },
   { 
-    href: "/dashboard/settings", 
+    href: "/settings", 
     icon: Settings, 
     label: "Settings",
     description: "Configure your API preferences"
@@ -56,6 +56,7 @@ const linkStyles = `
   px-3 py-2 rounded-md 
   transition-colors
   hover:text-primary
+  dark:hover:text-muted-foreground
   after:content-['']
   after:absolute
   after:w-0
@@ -98,7 +99,7 @@ export function Header() {
                         key={item.href}
                         href={item.href}
                         onClick={() => setIsOpen(false)}
-                        className={`${linkStyles} ${isActive ? 'bg-muted text-primary after:w-full' : ''}`}
+                        className={`${linkStyles} ${isActive ? 'bg-muted text-foreground after:w-full' : ''}`}
                       >
                         <Icon className="h-4 w-4" />
                         {item.label}
@@ -127,7 +128,7 @@ export function Header() {
                       <TooltipTrigger asChild>
                         <Link
                           href={item.href}
-                          className={`${linkStyles} ${isActive ? 'bg-muted text-primary after:w-full' : ''}`}
+                          className={`${linkStyles} ${isActive ? 'bg-muted text-foreground after:w-full' : ''}`}
                         >
                           <Icon className="h-4 w-4" />
                           {item.label}
