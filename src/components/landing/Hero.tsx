@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/ui/icons"
 import { useEffect, useState } from "react"
 
-const phrases = ["Talk to", "Test", "Debug", "Manage"];
+const phrases = ["Talk to", "Test", "Debug", "Manage", "Automate"];
 
 export function Hero() {
   const { data: session, status } = useSession()
