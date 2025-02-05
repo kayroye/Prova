@@ -3,7 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { createClient } from "@supabase/supabase-js";
-
+import { Endpoint } from "@/lib/types";
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -55,35 +55,71 @@ async function initializeUserTables(userId: string) {
     }
 
     // Add example API endpoints
-    const exampleEndpoints = [
+    const exampleEndpoints: Endpoint[] = [
       {
         user_id: userId,
-        url: "https://talk-to-api.vercel.app/api/example/8ball",
+        url: `${process.env.NEXT_PUBLIC_URL}/api/example/8ball`,
         parameters: "{ name: 'question', type: 'string', required: false }",
         created_at: now,
         updated_at: now,
+        methods: ["GET"],
+        headers: "",
+        environment: "development",
+        id: crypto.randomUUID(),
+        name: "Example Endpoint 1",
+        description: "Get a random 8ball question",
+        tags: ["fun", "8ball"],
+
       },
       {
         user_id: userId,
-        url: "https://talk-to-api.vercel.app/api/example/funfact",
+        url: `${process.env.NEXT_PUBLIC_URL}/api/example/funfact`,
         parameters: null,
         created_at: now,
         updated_at: now,
+        methods: ["GET"],
+        headers: "",
+        environment: "development",
+        id: crypto.randomUUID(),
+        name: "Example Endpoint 2",
+        description: "Get a random fun fact",
+        tags: ["fun", "fact"],
+
       },
       {
         user_id: userId,
-        url: "https://talk-to-api.vercel.app/api/example/random",
-        parameters: "{ name: 'min', type: 'number', required: false }, { name: 'max', type: 'number', required: false }",
+        url: `${process.env.NEXT_PUBLIC_URL}/api/example/random`,
+        parameters:
+          "{ name: 'min', type: 'number', required: false }, { name: 'max', type: 'number', required: false }",
         created_at: now,
+
         updated_at: now,
+        methods: ["GET"],
+        headers: "",
+        environment: "development",
+        name: "Example Endpoint 3",
+        description: "Get a random number between min and max",
+        tags: ["fun", "random"],
+
+        id: crypto.randomUUID(),
       },
       {
         user_id: userId,
-        url: "https://talk-to-api.vercel.app/api/example/echo",
-        parameters: "{ message: 'string', timestamp: 'number', metadata?: { source: 'string', tags: 'string[]' } }",
+        url: `${process.env.NEXT_PUBLIC_URL}/api/example/echo`,
+        parameters:
+          "{ message: 'string', timestamp: 'number', metadata?: { source: 'string', tags: 'string[]' } }",
+
         created_at: now,
         updated_at: now,
-      }
+        methods: ["POST", "PUT"],
+        headers: "",
+        environment: "development",
+        id: crypto.randomUUID(),
+        name: "Example Endpoint 4",
+        description: "Echo a message",
+        tags: ["fun", "echo"],
+
+      },
     ];
 
     const { error: endpointsError } = await supabase
@@ -92,21 +128,21 @@ async function initializeUserTables(userId: string) {
 
     if (endpointsError) {
       console.error("Error adding example endpoints:", endpointsError);
-      throw new Error(`Failed to add example endpoints: ${endpointsError.message}`);
+      throw new Error(
+        `Failed to add example endpoints: ${endpointsError.message}`
+      );
     }
 
     // Create default chat session
-    const { error: chatError } = await supabase
-      .from("chat_sessions")
-      .insert([
-        {
-          user_id: userId,
-          status: "active",
-          endpoints: [],
-          created_at: now,
-          updated_at: now,
-        },
-      ]);
+    const { error: chatError } = await supabase.from("chat_sessions").insert([
+      {
+        user_id: userId,
+        status: "active",
+        endpoints: [],
+        created_at: now,
+        updated_at: now,
+      },
+    ]);
 
     if (chatError) {
       console.error("Error creating default chat session:", chatError);
@@ -250,7 +286,7 @@ const authOptions: AuthOptions = {
       console.log("Starting signIn callback with:", {
         user: { email: user.email, name: user.name },
         accountProvider: account?.provider,
-        hasProfile: !!profile
+        hasProfile: !!profile,
       });
 
       // For credentials authentication, just return true as the authorize function already handles verification
@@ -262,10 +298,12 @@ const authOptions: AuthOptions = {
       try {
         // Check if a user exists with this email
         console.log("Checking for existing user with email:", user.email);
-        const { data: { users }, error: userError } = await supabase.auth.admin
-          .listUsers();
+        const {
+          data: { users },
+          error: userError,
+        } = await supabase.auth.admin.listUsers();
 
-        const existingUser = users.find(u => u.email === user.email);
+        const existingUser = users.find((u) => u.email === user.email);
 
         if (userError) {
           console.error("Error checking existing user:", userError);
@@ -276,12 +314,21 @@ const authOptions: AuthOptions = {
         // If no user exists, redirect to password setup
         if (!existingUser) {
           console.log("No existing user, redirecting to password setup");
-          const setupUrl = `/auth/setup-password?email=${encodeURIComponent(user.email!)}&name=${encodeURIComponent(user.name || '')}&provider=${account.provider}&provider_account_id=${account.providerAccountId}&avatar_url=${encodeURIComponent(user.image || '')}`;
+          const setupUrl = `/auth/setup-password?email=${encodeURIComponent(
+            user.email!
+          )}&name=${encodeURIComponent(user.name || "")}&provider=${
+            account.provider
+          }&provider_account_id=${
+            account.providerAccountId
+          }&avatar_url=${encodeURIComponent(user.image || "")}`;
           return setupUrl;
         }
 
         const userId = existingUser.id;
-        console.log("Existing user check result:", { userId, exists: !!userId });
+        console.log("Existing user check result:", {
+          userId,
+          exists: !!userId,
+        });
 
         // Check if user has profile initialized
         console.log("Checking if user has profile initialized");
@@ -292,7 +339,9 @@ const authOptions: AuthOptions = {
           .single();
 
         if (!profile) {
-          console.log("Profile not found, initializing tables for existing auth user");
+          console.log(
+            "Profile not found, initializing tables for existing auth user"
+          );
           await initializeUserTables(userId);
         }
 
@@ -302,7 +351,8 @@ const authOptions: AuthOptions = {
           .select("provider")
           .eq("user_id", userId);
 
-        const connectedProviders = oauthData?.map(account => account.provider) || [];
+        const connectedProviders =
+          oauthData?.map((account) => account.provider) || [];
         console.log("Connected providers:", connectedProviders);
 
         // If no connected providers, add the current provider
@@ -310,21 +360,26 @@ const authOptions: AuthOptions = {
           console.log("Adding new provider connection:", {
             provider: account.provider,
             userId,
-            providerAccountId: account.providerAccountId
+            providerAccountId: account.providerAccountId,
           });
-          
-          const { data: newAccount, error: insertError } = await supabase.from("oauth_accounts").insert({
-            user_id: userId,
-            provider: account.provider.toLowerCase(),
-            created_at: new Date().toISOString(),
-            provider_account_id: account.providerAccountId,
-          });
+
+          const { data: newAccount, error: insertError } = await supabase
+            .from("oauth_accounts")
+            .insert({
+              user_id: userId,
+              provider: account.provider.toLowerCase(),
+              created_at: new Date().toISOString(),
+              provider_account_id: account.providerAccountId,
+            });
 
           if (insertError) {
             console.error("Error adding connected provider:", insertError);
           }
 
-          console.log("Added connected provider result:", { newAccount, error: insertError });
+          console.log("Added connected provider result:", {
+            newAccount,
+            error: insertError,
+          });
         }
 
         // Check MFA status
@@ -335,7 +390,9 @@ const authOptions: AuthOptions = {
           .single();
 
         if (mfaData?.is_enabled) {
-          return `/login?email=${encodeURIComponent(user.email!)}&requireMfa=true&provider=${account.provider}`;
+          return `/login?email=${encodeURIComponent(
+            user.email!
+          )}&requireMfa=true&provider=${account.provider}`;
         }
 
         return true;
@@ -349,8 +406,10 @@ const authOptions: AuthOptions = {
         // For OAuth sign in, we need to get the Supabase user ID
         if (account && account.type === "oauth") {
           // Find the Supabase user with matching email
-          const { data: { users } } = await supabase.auth.admin.listUsers();
-          const supabaseUser = users.find(u => u.email === user.email);
+          const {
+            data: { users },
+          } = await supabase.auth.admin.listUsers();
+          const supabaseUser = users.find((u) => u.email === user.email);
           if (supabaseUser) {
             token.id = supabaseUser.id;
           }

@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { signIn } from "next-auth/react"
 
 export function SetupPasswordForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -64,8 +65,19 @@ export function SetupPasswordForm() {
         throw new Error(error)
       }
 
+      // Sign in with NextAuth
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        throw new Error(result.error)
+      }
+
       toast.success("Account setup complete")
-      router.push("/login?setup=complete")
+      router.push("/dashboard")
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Something went wrong")
       console.error(error)
