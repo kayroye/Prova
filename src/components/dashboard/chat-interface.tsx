@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { UserProfile } from "@/lib/types";
 
 interface Message {
   id: string;
@@ -42,10 +43,19 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [chatId, setChatId] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [hasReachedLimit, setHasReachedLimit] = useState(false);
   const { toast } = useToast();
+
+  const loadUserProfile = useCallback(async () => {
+    const response = await fetch("/api/user/profile");
+    const data = await response.json();
+    setUserProfile(data);
+  }, []);
 
   // Load chat session from localStorage on mount
   useEffect(() => {
+    loadUserProfile();
     const savedChatId = localStorage.getItem(CHAT_SESSION_KEY);
     if (savedChatId) {
       // Verify if the chat session exists before setting it
@@ -63,7 +73,7 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
           localStorage.removeItem(CHAT_SESSION_KEY);
         });
     }
-  }, []);
+  }, [loadUserProfile]);
 
   const createChatSession = useCallback(async () => {
     try {
@@ -138,6 +148,7 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
 
   useEffect(() => {
     if (selectedEndpoints?.length) {
+
       // Only create a new chat session if we don't have a valid chatId
       // and there's no saved chat in localStorage
       const savedChatId = localStorage.getItem(CHAT_SESSION_KEY);
@@ -152,6 +163,15 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
       loadExistingMessages(chatId);
     }
   }, [chatId, loadExistingMessages]);
+
+  useEffect(() => {
+    if (userProfile?.role === "free") {
+      const userMessageCount = messages.filter(msg => msg.role === "user").length;
+      setHasReachedLimit(userMessageCount >= 9);
+    } else {
+      setHasReachedLimit(false);
+    }
+  }, [messages, userProfile]);
 
   const scrollToBottom = useCallback(() => {
     if (scrollContainerRef.current) {
@@ -169,12 +189,34 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
   const handleNewChat = () => {
     setChatId(null);
     setMessages([]);
+    setHasReachedLimit(false);
     localStorage.removeItem(CHAT_SESSION_KEY);
     createChatSession();
   };
 
+
   const handleSubmit = async () => {
     if (!input.trim() || !chatId) return;
+
+    // Count only user messages
+    const userMessageCount = messages.filter(msg => msg.role === "user").length;
+
+    // Block sending if user has reached the limit
+    if (userProfile?.role === "free" && userMessageCount >= 8) {
+      toast({
+        variant: "destructive",
+        title: "Message Limit Reached",
+        description: "You've reached the message limit for this chat. Please start a new chat or upgrade to premium for unlimited messages.",
+      });
+    } else if (userProfile?.role === "free" && userMessageCount >= 6) {
+      const remainingMessages = 8 - userMessageCount;
+      toast({
+        variant: "warning",
+        title: "Message Limit Warning",
+        description: `You have ${remainingMessages} message${remainingMessages === 1 ? '' : 's'} remaining in this chat. Consider upgrading to premium for unlimited messages.`,
+      });
+    }
+    
 
     const userMessage: Message = {
       id: uuidv4(),
@@ -332,12 +374,14 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder={
-              selectedEndpoints?.length
+              hasReachedLimit
+                ? "Message limit reached. Start a new chat or upgrade to premium."
+                : selectedEndpoints?.length
                 ? "Type your message..."
                 : "Add an API endpoint to get started"
             }
             className="resize-none h-10 min-h-0 py-2 px-3"
-            disabled={isLoading || !chatId || !selectedEndpoints?.length}
+            disabled={isLoading || !chatId || !selectedEndpoints?.length || hasReachedLimit}
           />
           <Button
             onClick={handleSubmit}
@@ -345,7 +389,8 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
               isLoading ||
               !input.trim() ||
               !chatId ||
-              !selectedEndpoints?.length
+              !selectedEndpoints?.length ||
+              hasReachedLimit
             }
             size="icon"
             className="h-10 w-10 shrink-0"

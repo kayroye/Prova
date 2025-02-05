@@ -18,3 +18,11 @@ export interface ChatEndpoint {
   url: string;
   parameters?: string;
 }
+
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  role: string;
+  created_at: string;
+  updated_at: string;
+}

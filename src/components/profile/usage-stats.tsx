@@ -13,14 +13,16 @@ interface UsageStatsProps {
 }
 
 const RATE_LIMITS = {
-  free: 100,
-  premium: 1000,
+  free: 15,
+  premium: 300,
 };
 
 export default function UsageStats({ role = "free", usage }: UsageStatsProps) {
   const dailyUsage = usage.find(u => u.period === "daily")?.count || 0;
   const monthlyUsage = usage.find(u => u.period === "monthly")?.count || 0;
-  const limit = RATE_LIMITS[role as keyof typeof RATE_LIMITS];
+  const freeLimit = RATE_LIMITS.free;
+  const premiumLimit = RATE_LIMITS.premium;
+
 
   const handleUpgrade = async () => {
     // TODO: Implement upgrade functionality
@@ -69,24 +71,28 @@ export default function UsageStats({ role = "free", usage }: UsageStatsProps) {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Daily Usage</span>
-                <span>{dailyUsage} / {limit} calls</span>
+                <span>{dailyUsage} / {freeLimit} calls</span>
               </div>
-              <Progress value={(dailyUsage / limit) * 100} />
+              <Progress value={(dailyUsage / freeLimit) * 100} />
             </div>
+
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Monthly Usage</span>
-                <span>{monthlyUsage} / {limit * 30} calls</span>
+                <span>{monthlyUsage} / {premiumLimit} calls</span>
               </div>
-              <Progress value={(monthlyUsage / (limit * 30)) * 100} />
+              <Progress value={(monthlyUsage / premiumLimit) * 100} />
             </div>
+
+
 
             <div className="rounded-lg bg-muted p-4">
               <h4 className="text-sm font-semibold mb-2">Usage Limits</h4>
               <ul className="text-sm space-y-1">
-                <li>• Daily limit: {limit} API calls</li>
-                <li>• Monthly limit: {limit * 30} API calls</li>
+                <li>• Daily limit: {freeLimit} API calls</li>
+                <li>• Monthly limit: {premiumLimit} API calls</li>
+
                 {role !== "premium" && (
                   <li className="text-muted-foreground">
                     • Upgrade to Premium for increased limits

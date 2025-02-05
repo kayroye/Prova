@@ -8,11 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MFASetup } from "@/components/auth/mfa-setup"
 import { Button } from "@/components/ui/button"
 import { Shield, Key, LogOut } from "lucide-react"
-
 interface SettingsContentProps {
   userId: string
 }
-
 interface SecuritySettings {
   mfaEnabled: boolean
   connectedProviders: string[]
