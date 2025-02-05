@@ -3,23 +3,7 @@
 import { useState, useEffect } from "react";
 import { ApiManagement } from "./api-management";
 import { DashboardContent } from "./dashboard-content";
-
-// Type for stored endpoints from the API
-interface StoredEndpoint {
-  id: string;
-  url: string;
-  parameters: string | null;
-  user_id: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Type for chat interface endpoints
-interface ChatEndpoint {
-  id: string;
-  url: string;
-  parameters?: string;
-}
+import { Endpoint, ChatEndpoint } from "@/lib/types";
 
 const SELECTED_ENDPOINTS_KEY = "selectedEndpoints";
 
@@ -27,7 +11,7 @@ export function DashboardWrapper() {
   const [selectedEndpoints, setSelectedEndpoints] = useState<ChatEndpoint[]>(
     []
   );
-  const [endpoints, setEndpoints] = useState<StoredEndpoint[]>([]);
+  const [endpoints, setEndpoints] = useState<Endpoint[]>([]);
 
   // Load selected endpoints from localStorage on mount
   useEffect(() => {
@@ -63,7 +47,7 @@ export function DashboardWrapper() {
           !localStorage.getItem(SELECTED_ENDPOINTS_KEY)
         ) {
           const chatEndpoints: ChatEndpoint[] = data.map(
-            (e: StoredEndpoint) => ({
+            (e: Endpoint) => ({
               id: e.id,
               url: e.url,
               parameters: e.parameters || undefined,

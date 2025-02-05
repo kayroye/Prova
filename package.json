@@ -1,7 +1,8 @@
 {
   "name": "prova",
-  "version": "0.5.9",
+  "version": "0.6.3",
   "private": true,
+
   "scripts": {
     "dev": "next dev --turbopack -H 0.0.0.0",
     "build": "next build",

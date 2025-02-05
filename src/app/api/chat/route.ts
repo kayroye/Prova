@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         properties: {
           parameters: {
             type: "string",
-            description: endpoint.parameters || "Parameters for the API call",
+            description: JSON.stringify(endpoint.parameters) || "Parameters for the API call",
           },
           method: {
             type: "string",
@@ -103,6 +103,8 @@ export async function POST(request: Request) {
       });
       chatMessages = messages as ChatCompletionMessageParam[];
     }
+
+    console.log(functions[2].parameters);
 
     // Call OpenAI
     const completion = await openai.chat.completions.create({

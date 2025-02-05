@@ -34,10 +34,19 @@ export async function POST(request: Request) {
   const supabase = createClient();
   
   try {
-    const { url, parameters } = await request.json();
+    const { 
+      name,
+      description,
+      url,
+      parameters,
+      headers,
+      methods,
+      environment,
+      tags
+    } = await request.json();
 
-    if (!url) {
-      return new NextResponse("URL is required", { status: 400 });
+    if (!url || !name) {
+      return new NextResponse("URL and name are required", { status: 400 });
     }
 
     const now = new Date().toISOString();
@@ -46,8 +55,14 @@ export async function POST(request: Request) {
       .insert([
         {
           user_id: session.user.id,
+          name,
+          description,
           url,
-          parameters: parameters || null,
+          parameters: parameters || {},
+          headers: headers || {},
+          methods: methods || ["GET"],
+          environment: environment || "production",
+          tags: tags || [],
           created_at: now,
           updated_at: now,
         },

@@ -5,10 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Send, Plus } from "lucide-react";
+import { Loader2, Send, Plus, Pencil, Link2 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from "react-markdown";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Message {
   id: string;
@@ -24,10 +30,10 @@ interface ChatMessage {
 }
 
 interface ChatInterfaceProps {
-  selectedEndpoints?: Array<{id: string, url: string, parameters?: string}>;
+  selectedEndpoints?: Array<{ id: string; url: string; parameters?: string }>;
 }
 
-const CHAT_SESSION_KEY = 'currentChatSession';
+const CHAT_SESSION_KEY = "currentChatSession";
 
 export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -44,7 +50,7 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
     if (savedChatId) {
       // Verify if the chat session exists before setting it
       fetch(`/api/chat/messages/${savedChatId}`)
-        .then(response => {
+        .then((response) => {
           if (!response.ok) {
             // If session doesn't exist, remove it from localStorage
             localStorage.removeItem(CHAT_SESSION_KEY);
@@ -75,15 +81,18 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
 
       // Add initial system message
       if (data.message) {
-        setMessages([{
-          id: uuidv4(),
-          role: "assistant",
-          content: data.message,
-          timestamp: new Date(),
-        }]);
+        setMessages([
+          {
+            id: uuidv4(),
+            role: "assistant",
+            content: data.message,
+            timestamp: new Date(),
+          },
+        ]);
       }
     } catch (err: unknown) {
-      const error = err instanceof Error ? err : new Error('Unknown error occurred');
+      const error =
+        err instanceof Error ? err : new Error("Unknown error occurred");
       console.error("Failed to create chat session:", error);
       toast({
         variant: "destructive",
@@ -110,7 +119,7 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
             content = msg.message;
           }
         }
-        
+
         return {
           id: uuidv4(),
           role: msg.sender === "user" ? "user" : "assistant",
@@ -183,7 +192,7 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: messages.concat(userMessage).map(m => ({
+          messages: messages.concat(userMessage).map((m) => ({
             role: m.role,
             content: m.content,
           })),
@@ -194,21 +203,26 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
       if (!response.ok) throw new Error("Failed to get response");
 
       const data = await response.json();
-      
+
       if (data.message) {
-        const content = typeof data.message.content === 'string' 
-          ? data.message.content 
-          : JSON.stringify(data.message.content);
-          
-        setMessages((prev) => [...prev, {
-          id: uuidv4(),
-          role: "assistant",
-          content,
-          timestamp: new Date(),
-        }]);
+        const content =
+          typeof data.message.content === "string"
+            ? data.message.content
+            : JSON.stringify(data.message.content);
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: uuidv4(),
+            role: "assistant",
+            content,
+            timestamp: new Date(),
+          },
+        ]);
       }
     } catch (err: unknown) {
-      const error = err instanceof Error ? err : new Error('Unknown error occurred');
+      const error =
+        err instanceof Error ? err : new Error("Unknown error occurred");
       console.error("Failed to get AI response:", error);
       toast({
         variant: "destructive",
@@ -236,7 +250,7 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
           size="sm"
           onClick={handleNewChat}
           disabled={!selectedEndpoints?.length}
-          className="hidden sm:flex"
+          className="hidden sm:flex items-center"
         >
           <Plus className="h-4 w-4 mr-2" />
           New Chat
@@ -254,7 +268,10 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
           </div>
         )}
         <ScrollArea className="flex-1 overflow-y-auto">
-          <div ref={scrollContainerRef} className="flex flex-col space-y-4 px-6 py-4">
+          <div
+            ref={scrollContainerRef}
+            className="flex flex-col space-y-4 px-6 py-4"
+          >
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -269,11 +286,13 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
                       : "bg-muted"
                   }`}
                 >
-                  <div className={`prose prose-sm max-w-none ${
-                    message.role === "user"
-                      ? "[&_*]:text-primary-foreground"
-                      : "dark:prose-invert"
-                  }`}>
+                  <div
+                    className={`prose prose-sm max-w-none ${
+                      message.role === "user"
+                        ? "[&_*]:text-primary-foreground"
+                        : "dark:prose-invert"
+                    }`}
+                  >
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                   </div>
                   <p className="text-xs mt-1 opacity-70">
@@ -286,26 +305,48 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
         </ScrollArea>
 
         <div className="flex gap-2 px-6 pb-6 pt-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleNewChat}
-            disabled={!selectedEndpoints?.length}
-            className="sm:hidden h-10"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={!selectedEndpoints?.length}
+                className="sm:hidden h-10"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="top" sideOffset={12}>
+              <DropdownMenuItem onClick={handleNewChat}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Start new chat
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link2 className="h-4 w-4 mr-2" />
+                Add endpoint
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder={selectedEndpoints?.length ? "Type your message..." : "Add an API endpoint to get started"}
+            placeholder={
+              selectedEndpoints?.length
+                ? "Type your message..."
+                : "Add an API endpoint to get started"
+            }
             className="resize-none h-10 min-h-0 py-2 px-3"
             disabled={isLoading || !chatId || !selectedEndpoints?.length}
           />
           <Button
             onClick={handleSubmit}
-            disabled={isLoading || !input.trim() || !chatId || !selectedEndpoints?.length}
+            disabled={
+              isLoading ||
+              !input.trim() ||
+              !chatId ||
+              !selectedEndpoints?.length
+            }
             size="icon"
             className="h-10 w-10 shrink-0"
           >
@@ -319,4 +360,4 @@ export function ChatInterface({ selectedEndpoints }: ChatInterfaceProps) {
       </CardContent>
     </Card>
   );
-} 
+}

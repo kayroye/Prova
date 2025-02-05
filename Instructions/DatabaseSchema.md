@@ -13,32 +13,38 @@
 - **user_profiles** (Our Custom User Data)
   - `user_id`: UUID (foreign key to Supabase Auth User)
   - `role`: Enum (free, premium)
-  - `createdAt`: Timestamp
-  - `updatedAt`: Timestamp
+  - `created_at`: Timestamp
+  - `updated_at`: Timestamp
 
 - **api_endpoints**
   - `id`: UUID
-  - `userId`: UUID (foreign key to User)
+  - `user_id`: UUID (foreign key to User)
+  - `name`: String
+  - `description`: String
   - `url`: String
   - `parameters`: JSON
-  - `createdAt`: Timestamp
-  - `updatedAt`: Timestamp
+  - `headers`: JSON
+  - `methods`: String[]
+  - `environment`: String
+  - `tags`: String[]
+  - `created_at`: Timestamp
+  - `updated_at`: Timestamp
 
 - **subscriptions**
   - `id`: UUID
   - `userId`: UUID (foreign key to User)
   - `stripeSubscriptionId`: String
   - `status`: Enum (active, canceled)
-  - `createdAt`: Timestamp
-  - `updatedAt`: Timestamp
+  - `created_at`: Timestamp
+  - `updated_at`: Timestamp
 
 - **user_mfa**
   - `user_id`: UUID (foreign key to User)
   - `secret`: String
   - `backup_codes`: String[]
   - `is_enabled`: Boolean
-  - `createdAt`: Timestamp
-  - `updatedAt`: Timestamp
+  - `created_at`: Timestamp
+  - `updated_at`: Timestamp
 
 - **oauth_accounts**
   - `id`: UUID

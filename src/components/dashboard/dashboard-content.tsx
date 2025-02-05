@@ -1,13 +1,7 @@
 "use client";
 
 import { ChatInterface } from "./chat-interface";
-
-export interface ChatEndpoint {
-  id: string;
-  url: string;
-  parameters?: string;
-}
-
+import { ChatEndpoint } from "@/lib/types";
 export interface DashboardContentProps {
   selectedEndpoints: ChatEndpoint[];
 }
