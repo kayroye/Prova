@@ -10,7 +10,6 @@ A modern web application that allows users to interact with APIs through natural
 ![GitHub stars](https://img.shields.io/github/stars/kayroye/prova)
 ![GitHub issues](https://img.shields.io/github/issues/kayroye/prova)
 ![GitHub license](https://img.shields.io/github/license/kayroye/prova)
-![GitHub release](https://img.shields.io/github/v/release/kayroye/prova)
 
 </div>
 
