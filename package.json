@@ -1,8 +1,7 @@
 {
   "name": "prova",
-  "version": "0.6.6",
+  "version": "0.7.0",
   "private": true,
-
   "scripts": {
     "dev": "next dev --turbopack -H 0.0.0.0",
     "build": "next build",
@@ -38,6 +37,7 @@
     "next-themes": "^0.4.4",
     "openai": "^4.77.0",
     "otplib": "^12.0.1",
+    "prismjs": "^1.29.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
